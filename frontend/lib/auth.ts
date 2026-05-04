@@ -1,18 +1,39 @@
-const TOKEN_KEY = "raisetimeline_token";
+const ACCESS_TOKEN_KEY = "raisetimeline_access_token";
+const REFRESH_TOKEN_KEY = "raisetimeline_refresh_token";
 
-export const getToken = (): string | null => {
+export const getAccessToken = (): string | null => {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
+  return localStorage.getItem(ACCESS_TOKEN_KEY);
 };
 
-export const setToken = (token: string): void => {
-  localStorage.setItem(TOKEN_KEY, token);
-  document.cookie = `${TOKEN_KEY}=1; path=/; max-age=86400; SameSite=Lax`;
+export const setAccessToken = (token: string): void => {
+  localStorage.setItem(ACCESS_TOKEN_KEY, token);
+  document.cookie = `${ACCESS_TOKEN_KEY}=1; path=/; max-age=900; SameSite=Lax`;
 };
 
-export const removeToken = (): void => {
-  localStorage.removeItem(TOKEN_KEY);
-  document.cookie = `${TOKEN_KEY}=; path=/; max-age=0`;
+export const getRefreshToken = (): string | null => {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
 };
 
-export const isAuthenticated = (): boolean => !!getToken();
+export const setRefreshToken = (token: string): void => {
+  localStorage.setItem(REFRESH_TOKEN_KEY, token);
+};
+
+export const setTokens = (accessToken: string, refreshToken: string): void => {
+  setAccessToken(accessToken);
+  setRefreshToken(refreshToken);
+};
+
+export const removeTokens = (): void => {
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  document.cookie = `${ACCESS_TOKEN_KEY}=; path=/; max-age=0`;
+};
+
+export const isAuthenticated = (): boolean => !!getAccessToken();
+
+// 後方互換
+export const getToken = getAccessToken;
+export const setToken = setAccessToken;
+export const removeToken = removeTokens;
