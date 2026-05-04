@@ -2,6 +2,7 @@ package com.raisetimeline.controller;
 
 import com.raisetimeline.dto.AuthResponse;
 import com.raisetimeline.dto.LoginRequest;
+import com.raisetimeline.dto.RefreshRequest;
 import com.raisetimeline.dto.RegisterRequest;
 import com.raisetimeline.service.AuthService;
 import jakarta.validation.Valid;
@@ -25,5 +26,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest request) {
+        return ResponseEntity.ok(authService.refresh(request));
     }
 }

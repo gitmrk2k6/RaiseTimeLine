@@ -2,10 +2,11 @@ package com.raisetimeline.service;
 
 import com.raisetimeline.dto.AuthResponse;
 import com.raisetimeline.dto.LoginRequest;
+import com.raisetimeline.dto.RefreshRequest;
 import com.raisetimeline.dto.RegisterRequest;
 import com.raisetimeline.entity.User;
 import com.raisetimeline.exception.DuplicateResourceException;
-import com.raisetimeline.repository.UserRepository;
+import com.raisetimeline.mapper.UserMapper;
 import com.raisetimeline.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,20 +19,18 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository userRepository;
+    private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateResourceException(
-                    "このメールアドレスはすでに使用されています", "email");
+        if (userMapper.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException("このメールアドレスはすでに使用されています", "email");
         }
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new DuplicateResourceException(
-                    "このユーザー名はすでに使用されています", "username");
+        if (userMapper.existsByUsername(request.getUsername())) {
+            throw new DuplicateResourceException("このユーザー名はすでに使用されています", "username");
         }
 
         User user = User.builder()
@@ -39,10 +38,9 @@ public class AuthService {
                 .email(request.getEmail())
                 .passwordDigest(passwordEncoder.encode(request.getPassword()))
                 .build();
-        userRepository.save(user);
+        userMapper.insert(user);
 
-        String token = jwtUtil.generateToken(user.getId(), user.getEmail());
-        return new AuthResponse(token, user.getId(), user.getUsername(), user.getEmail());
+        return buildAuthResponse(user);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -50,10 +48,26 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow();
+        User user = userMapper.findByEmail(request.getEmail()).orElseThrow();
+        return buildAuthResponse(user);
+    }
 
-        String token = jwtUtil.generateToken(user.getId(), user.getEmail());
-        return new AuthResponse(token, user.getId(), user.getUsername(), user.getEmail());
+    public AuthResponse refresh(RefreshRequest request) {
+        String refreshToken = request.getRefreshToken();
+        if (!jwtUtil.isRefreshToken(refreshToken)) {
+            throw new IllegalArgumentException("無効なリフレッシュトークンです");
+        }
+
+        Long userId = jwtUtil.extractUserId(refreshToken);
+        User user = userMapper.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("ユーザーが見つかりません"));
+
+        return buildAuthResponse(user);
+    }
+
+    private AuthResponse buildAuthResponse(User user) {
+        String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getEmail());
+        return new AuthResponse(accessToken, refreshToken, user.getId(), user.getUsername(), user.getEmail());
     }
 }

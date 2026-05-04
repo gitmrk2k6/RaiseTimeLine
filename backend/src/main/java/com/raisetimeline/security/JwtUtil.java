@@ -14,38 +14,62 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
+    private static final String TOKEN_TYPE_ACCESS = "access";
+    private static final String TOKEN_TYPE_REFRESH = "refresh";
+
     private final SecretKey secretKey;
-    private final long expirationMs;
+    private final long accessExpirationMs;
+    private final long refreshExpirationMs;
 
     public JwtUtil(
             @Value("${app.jwt.secret}") String secret,
-            @Value("${app.jwt.expiration-ms}") long expirationMs) {
+            @Value("${app.jwt.access-expiration-ms}") long accessExpirationMs,
+            @Value("${app.jwt.refresh-expiration-ms}") long refreshExpirationMs) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.expirationMs = expirationMs;
+        this.accessExpirationMs = accessExpirationMs;
+        this.refreshExpirationMs = refreshExpirationMs;
     }
 
-    public String generateToken(Long userId, String email) {
-        Date now = new Date();
-        return Jwts.builder()
-                .subject(String.valueOf(userId))
-                .claim("email", email)
-                .issuedAt(now)
-                .expiration(new Date(now.getTime() + expirationMs))
-                .signWith(secretKey)
-                .compact();
+    public String generateAccessToken(Long userId, String email) {
+        return buildToken(userId, email, accessExpirationMs, TOKEN_TYPE_ACCESS);
+    }
+
+    public String generateRefreshToken(Long userId, String email) {
+        return buildToken(userId, email, refreshExpirationMs, TOKEN_TYPE_REFRESH);
     }
 
     public Long extractUserId(String token) {
         return Long.valueOf(parseClaims(token).getSubject());
     }
 
-    public boolean isValid(String token) {
+    public boolean isAccessToken(String token) {
         try {
-            parseClaims(token);
-            return true;
+            Claims claims = parseClaims(token);
+            return TOKEN_TYPE_ACCESS.equals(claims.get("type", String.class));
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
+    }
+
+    public boolean isRefreshToken(String token) {
+        try {
+            Claims claims = parseClaims(token);
+            return TOKEN_TYPE_REFRESH.equals(claims.get("type", String.class));
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    private String buildToken(Long userId, String email, long expirationMs, String type) {
+        Date now = new Date();
+        return Jwts.builder()
+                .subject(String.valueOf(userId))
+                .claim("email", email)
+                .claim("type", type)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + expirationMs))
+                .signWith(secretKey)
+                .compact();
     }
 
     private Claims parseClaims(String token) {
