@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5433/raisetimeline
+    url: jdbc:postgresql://localhost:5432/raisetimeline
     username: raisetimeline
     password: raisetimeline
   jpa:
@@ -20,7 +20,7 @@ app:
     expiration-ms: 86400000
 
 server:
-  port: 8081
+  port: 8080
 
 logging:
   level:
