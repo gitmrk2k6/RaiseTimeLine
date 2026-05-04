@@ -40,4 +40,9 @@ public class GlobalExceptionHandler {
                 "message", "メールアドレスまたはパスワードが正しくありません"
         ));
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+    }
 }
