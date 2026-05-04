@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const TOKEN_KEY = "raisetimeline_token";
+const TOKEN_KEY = "raisetimeline_access_token";
 const PUBLIC_PATHS = ["/login", "/register"];
 const PROTECTED_PREFIX = "/home";
 

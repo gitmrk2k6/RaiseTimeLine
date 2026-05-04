@@ -6,94 +6,98 @@
 
 | 技術 | バージョン | 実装状況 | 備考 |
 | --- | --- | --- | --- |
-| Java | 21 (LTS) | 🔲 未実装 | Spring Boot 3.x が推奨する LTS バージョン |
-| Spring Boot | 3.x | 🔲 未実装 | REST API サーバー |
-| Spring Security | 6.x | 🔲 未実装 | 認証・認可（JWT連携） |
-| JJWT | 0.12.x | 🔲 未実装 | JWT トークン生成・検証 |
-| Spring Data JPA | 3.x | 🔲 未実装 | ORM（Hibernate） |
-| Gradle | 8.x | 🔲 未実装 | ビルドツール |
-| AWS SDK for Java | 2.x | 🔲 未実装 | S3 への画像アップロード |
+| Java | 21 (LTS) | ✅ 実装済み | Spring Boot 3.x が推奨する LTS バージョン |
+| Spring Boot | 3.4.4 | ✅ 実装済み | REST API サーバー |
+| Spring Security | 6.x | ✅ 実装済み | 認証・認可（JWT連携） |
+| JJWT | 0.12.6 | ✅ 実装済み | JWT トークン生成・検証 |
+| MyBatis | 3.0.4 | ✅ 実装済み | SQL マッパー（JPA の代わりに採用） |
+| Flyway | 11.x | ✅ 実装済み | DB マイグレーション管理 |
+| Gradle | 8.x | ✅ 実装済み | ビルドツール（Kotlin DSL） |
+| AWS SDK for Java | 2.x | 🔲 未実装 | S3 への画像アップロード（F-05） |
 
 ## 2. フロントエンド
 
 | 技術 | バージョン | 実装状況 | 備考 |
 | --- | --- | --- | --- |
-| Next.js | 14.x | 🔲 未実装 | React フレームワーク（App Router） |
-| React | 18.x | 🔲 未実装 | UI ライブラリ |
-| TypeScript | 5.x | 🔲 未実装 | 型安全な JavaScript |
-| Tailwind CSS | 3.x | 🔲 未実装 | ユーティリティファーストCSSフレームワーク |
-| Axios | 1.x | 🔲 未実装 | HTTP クライアント（API呼び出し） |
+| Next.js | 14.2.35 | ✅ 実装済み | React フレームワーク（App Router） |
+| React | 18.x | ✅ 実装済み | UI ライブラリ |
+| TypeScript | 5.x | ✅ 実装済み | 型安全な JavaScript |
+| Tailwind CSS | 3.4.1 | ✅ 実装済み | ユーティリティファーストCSSフレームワーク |
+| Axios | 1.16.0 | ✅ 実装済み | HTTP クライアント（API呼び出し・自動トークンリフレッシュ） |
+| React Hook Form | 7.x | ✅ 実装済み | フォーム管理 |
+| Zod | 4.x | ✅ 実装済み | スキーマバリデーション |
+| EventSource API | ブラウザ標準 | ✅ 実装済み | SSE によるリアルタイム更新 |
+| IntersectionObserver API | ブラウザ標準 | ✅ 実装済み | 無限スクロール |
 
 ## 3. データベース
 
 | 技術 | バージョン | 実装状況 | 備考 |
 | --- | --- | --- | --- |
-| PostgreSQL | 17 | 🔲 未実装 | メインデータベース |
+| PostgreSQL | 17 | ✅ 実装済み | メインデータベース（Docker + 本番は AWS RDS） |
 
 ## 4. インフラ・クラウド
 
 | 技術 | バージョン | 実装状況 | 備考 |
 | --- | --- | --- | --- |
-| AWS S3 | - | 🔲 未実装 | 画像ストレージ（確定） |
-| AWS EC2 | - | 🔲 未実装 | アプリサーバー（前提） |
-| AWS RDS | PostgreSQL 17 | 🔲 未実装 | マネージドDB（前提） |
-| AWS ALB | - | 🔲 未実装 | ロードバランサー（前提） |
+| AWS S3 | - | 🔲 未実装 | 画像ストレージ（F-05） |
+| AWS EC2 | - | 🔲 未実装 | アプリサーバー |
+| AWS RDS | PostgreSQL 17 | 🔲 未実装 | マネージドDB |
+| AWS ALB | - | 🔲 未実装 | ロードバランサー |
 
 ## 5. 開発ツール
 
 | 技術 | 実装状況 | 備考 |
 | --- | --- | --- |
-| Docker / Docker Compose | 🔲 未実装 | ローカル開発環境（PostgreSQL コンテナ） |
-| IntelliJ IDEA / VS Code | 🔲 未実装 | IDE |
-| GitHub | 🔲 未実装 | ソースコード管理 |
+| Docker / Docker Compose | ✅ 実装済み | ローカル開発環境（PostgreSQL コンテナ） |
+| IntelliJ IDEA / VS Code | ✅ 実装済み | IDE |
+| GitHub | ✅ 実装済み | ソースコード管理・Issue・PR |
 
-## 6. プロジェクト構成（予定）
+## 6. プロジェクト構成（現在）
 
-```
+```text
 RaiseTimeLine/
 ├── docs/                        # ドキュメント類
-│   ├── requirements.md
-│   ├── functional-requirements.md
-│   ├── screen-design.md
-│   ├── database-design.md
-│   ├── tech-stack.md
-│   └── infrastructure.md
 │
 ├── backend/                     # Spring Boot プロジェクト
-│   ├── src/
-│   │   └── main/
-│   │       ├── java/com/raisetech/raisetimeline/
-│   │       │   ├── controller/  # REST コントローラー
-│   │       │   ├── service/     # ビジネスロジック
-│   │       │   ├── repository/  # データアクセス（JPA）
-│   │       │   ├── entity/      # JPA エンティティ
-│   │       │   ├── dto/         # リクエスト/レスポンス DTO
-│   │       │   └── security/    # JWT・Spring Security 設定
-│   │       └── resources/
-│   │           └── application.yml
-│   └── build.gradle
+│   └── src/main/
+│       ├── java/com/raisetimeline/
+│       │   ├── controller/      # AuthController, PostController, HealthController
+│       │   ├── service/         # AuthService, PostService, PostSseService
+│       │   ├── mapper/          # UserMapper, PostMapper（MyBatis）
+│       │   ├── entity/          # User, Post
+│       │   ├── dto/             # リクエスト/レスポンス DTO
+│       │   ├── exception/       # ForbiddenException, DuplicateResourceException, GlobalExceptionHandler
+│       │   ├── security/        # JwtUtil, JwtAuthenticationFilter, UserDetailsServiceImpl
+│       │   └── config/          # SecurityConfig
+│       └── resources/
+│           ├── application.yml
+│           ├── db/migration/    # Flyway マイグレーション（V1: users, V2: posts）
+│           └── mapper/          # PostMapper.xml（MyBatis XML）
 │
 ├── frontend/                    # Next.js プロジェクト
-│   ├── app/                     # App Router
-│   │   ├── page.tsx             # タイムライン (/)
+│   ├── app/
+│   │   ├── home/page.tsx        # タイムライン（投稿一覧・SSE・無限スクロール）
 │   │   ├── login/page.tsx
 │   │   ├── register/page.tsx
-│   │   ├── posts/[id]/page.tsx
-│   │   ├── users/[id]/page.tsx
-│   │   └── search/page.tsx
-│   ├── components/              # 再利用コンポーネント
-│   ├── lib/                     # API クライアント・ユーティリティ
-│   └── package.json
+│   │   └── components/
+│   │       ├── PostForm.tsx     # 投稿作成フォーム
+│   │       └── PostCard.tsx     # 投稿カード（編集・削除）
+│   ├── lib/
+│   │   ├── api.ts               # Axios インスタンス（自動トークンリフレッシュ）
+│   │   ├── auth.ts              # トークン・userId 管理
+│   │   └── posts.ts             # 投稿 API 関数
+│   └── middleware.ts            # ルート保護（認証チェック）
 │
-├── docker-compose.yml           # ローカル開発用 PostgreSQL
-└── README.md
+└── docker-compose.yml           # ローカル開発用 PostgreSQL
 ```
 
 ## 7. 技術選定理由
 
+- **MyBatis（JPA の代わり）**: SQL を直接記述できるため、JOIN や動的クエリ（カーソルページネーション）を明示的にコントロールできる。チームの SQL スキル向上にも寄与。
+- **SSE（Server-Sent Events）**: WebSocket より軽量で Spring Boot 標準の `SseEmitter` で実装できる。タイムラインへのリアルタイム配信はサーバー→クライアントの一方向で十分なため SSE が適切。
+- **カーソルベースページネーション**: `created_at` カーソルによるページネーションはオフセット方式より高速で、新着投稿が挿入されても重複・欠落が発生しない。
 - **Java Spring Boot**: RaiseTech コースの主要技術スタック。型安全・DI・AOP など本番現場でも広く使われるフレームワーク。
-- **Next.js (React)**: SSR/SSG に対応したモダンなフロントエンドフレームワーク。API Routes や App Router により構造化した開発が可能。
-- **PostgreSQL**: 本番環境（AWS RDS）でも使いやすいOSSリレーショナルDB。Spring Data JPA との親和性が高い。
+- **Next.js (React)**: SSR/SSG に対応したモダンなフロントエンドフレームワーク。App Router により構造化した開発が可能。
+- **PostgreSQL**: 本番環境（AWS RDS）でも使いやすい OSS リレーショナルDB。
 - **JWT認証**: ステートレスな認証方式で、フロントエンドとバックエンドを分離した構成（SPA + REST API）に適している。
-- **AWS S3**: 画像ストレージとして高可用・低コスト。アプリサーバーにファイルを持たないことでスケールしやすい設計となる。
 - **Tailwind CSS**: クラス名でスタイルを記述するユーティリティファーストCSS。カスタムデザインを素早く実装できる。
