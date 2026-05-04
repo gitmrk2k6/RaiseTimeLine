@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import api from "@/lib/api";
-import { setTokens } from "@/lib/auth";
+import { setTokens, setUserId } from "@/lib/auth";
 import type { AxiosError } from "axios";
 
 const schema = z.object({
@@ -34,6 +34,7 @@ export default function LoginPage() {
     try {
       const res = await api.post("/auth/login", data);
       setTokens(res.data.accessToken, res.data.refreshToken);
+      setUserId(res.data.userId);
       router.push("/home");
     } catch (err) {
       const e = err as AxiosError<{ message: string }>;

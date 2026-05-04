@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.raisetimeline.mapper.PostMapper">
+
+    <resultMap id="PostResponseMap" type="com.raisetimeline.dto.PostResponse">
+        <result property="id"              column="id"/>
+        <result property="content"         column="content"/>
+        <result property="createdAt"       column="created_at"/>
+        <result property="updatedAt"       column="updated_at"/>
+        <result property="userId"          column="user_id"/>
+        <result property="username"        column="username"/>
+        <result property="profileImageUrl" column="profile_image_url"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="PostResponseMap">
+        SELECT p.id, p.content, p.created_at, p.updated_at,
+               p.user_id, u.username, u.profile_image_url
+        FROM posts p
+        JOIN users u ON u.id = p.user_id
+        <where>
+            <if test="before != null">
+                p.created_at &lt; #{before}
+            </if>
+        </where>
+        ORDER BY p.created_at DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>
