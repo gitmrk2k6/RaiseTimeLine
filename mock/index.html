@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RaiseTimeLine</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ナビゲーションバー（ログイン後に表示） -->
+  <nav id="navbar" class="navbar hidden">
+    <div class="navbar-inner">
+      <a href="#timeline" class="navbar-logo">RaiseTimeLine</a>
+      <div class="navbar-actions">
+        <a href="#search" class="nav-icon-btn" title="ユーザー検索">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        </a>
+        <a href="#profile/me" class="nav-icon-btn nav-avatar" id="nav-avatar" title="プロフィール">
+          <span id="nav-avatar-text">U</span>
+        </a>
+        <button class="nav-icon-btn" id="logout-btn" title="ログアウト">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="app">
+
+    <!-- SC-01 ログイン画面 -->
+    <section id="screen-login" class="screen auth-screen">
+      <div class="auth-card">
+        <div class="auth-logo">
+          <span class="logo-icon">R</span>
+          <h1>RaiseTimeLine</h1>
+        </div>
+        <h2>ログイン</h2>
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label for="login-email">メールアドレス</label>
+            <input type="email" id="login-email" placeholder="example@mail.com" autocomplete="email">
+            <span class="field-error" id="login-email-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="login-password">パスワード</label>
+            <input type="password" id="login-password" placeholder="パスワードを入力" autocomplete="current-password">
+            <span class="field-error" id="login-password-error"></span>
+          </div>
+          <span class="field-error form-error" id="login-form-error"></span>
+          <button type="submit" class="btn btn-primary btn-full">ログイン</button>
+        </form>
+        <p class="auth-link">アカウントをお持ちでない方は <a href="#register">新規登録</a></p>
+        <div class="demo-hint">
+          <p>デモ用アカウント: <code>alice@example.com</code> / <code>password123</code></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SC-02 ユーザー登録画面 -->
+    <section id="screen-register" class="screen auth-screen">
+      <div class="auth-card">
+        <div class="auth-logo">
+          <span class="logo-icon">R</span>
+          <h1>RaiseTimeLine</h1>
+        </div>
+        <h2>新規登録</h2>
+        <form id="register-form" novalidate>
+          <div class="form-group">
+            <label for="reg-username">ユーザー名</label>
+            <input type="text" id="reg-username" placeholder="例: raisetech_user" autocomplete="username">
+            <span class="field-error" id="reg-username-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="reg-email">メールアドレス</label>
+            <input type="email" id="reg-email" placeholder="example@mail.com" autocomplete="email">
+            <span class="field-error" id="reg-email-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="reg-password">パスワード</label>
+            <input type="password" id="reg-password" placeholder="8文字以上・英数字混在" autocomplete="new-password">
+            <span class="field-hint">8文字以上、英字と数字を含めてください</span>
+            <span class="field-error" id="reg-password-error"></span>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">登録する</button>
+        </form>
+        <p class="auth-link">すでにアカウントをお持ちの方は <a href="#login">ログイン</a></p>
+      </div>
+    </section>
+
+    <!-- SC-03 タイムライン画面 -->
+    <section id="screen-timeline" class="screen feed-screen">
+      <div class="feed-container">
+        <div class="feed-header">
+          <h2>タイムライン</h2>
+        </div>
+        <div id="timeline-posts" class="posts-list"></div>
+      </div>
+      <a href="#create" class="fab" title="投稿作成">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </a>
+    </section>
+
+    <!-- SC-04 投稿詳細画面 -->
+    <section id="screen-post-detail" class="screen feed-screen">
+      <div class="feed-container">
+        <div class="feed-header">
+          <button class="back-btn" onclick="history.back()">
+            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            戻る
+          </button>
+          <h2>投稿詳細</h2>
+        </div>
+        <div id="post-detail-content"></div>
+        <div class="comments-section">
+          <h3>コメント</h3>
+          <div id="post-comments-list" class="comments-list"></div>
+          <form id="comment-form" class="comment-form">
+            <div class="comment-input-row">
+              <textarea id="comment-input" placeholder="コメントを入力..." maxlength="140" rows="2"></textarea>
+              <button type="submit" class="btn btn-primary btn-sm">送信</button>
+            </div>
+            <div class="char-count-row">
+              <span id="comment-char-count" class="char-count">140</span>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- SC-05 投稿作成画面 -->
+    <section id="screen-create" class="screen feed-screen">
+      <div class="feed-container">
+        <div class="feed-header">
+          <button class="back-btn" onclick="history.back()">
+            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            戻る
+          </button>
+          <h2>新規投稿</h2>
+        </div>
+        <form id="create-post-form" class="create-form">
+          <div class="create-user-row">
+            <div class="avatar avatar-sm" id="create-avatar"><span id="create-avatar-text">U</span></div>
+            <div class="create-input-area">
+              <textarea id="post-content" placeholder="いまどうしてる？" maxlength="280" rows="4"></textarea>
+              <div class="char-count-row">
+                <span id="post-char-count" class="char-count">280</span>
+              </div>
+            </div>
+          </div>
+          <span class="field-error" id="post-content-error"></span>
+          <div id="image-preview-container" class="image-preview-container hidden">
+            <img id="image-preview" src="" alt="プレビュー">
+            <button type="button" class="image-remove-btn" id="image-remove-btn">✕</button>
+          </div>
+          <div class="create-actions">
+            <label for="image-upload" class="btn btn-icon" title="画像を追加">
+              <svg viewBox="0 0 24 24" width="20" height="20"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              画像を追加
+            </label>
+            <input type="file" id="image-upload" accept="image/jpeg,image/png,image/gif" class="hidden">
+            <span class="field-error" id="image-error"></span>
+            <button type="submit" class="btn btn-primary">投稿する</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- SC-06 プロフィール画面 -->
+    <section id="screen-profile" class="screen feed-screen">
+      <div class="feed-container">
+        <div class="feed-header">
+          <button class="back-btn" onclick="history.back()">
+            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            戻る
+          </button>
+          <h2>プロフィール</h2>
+        </div>
+        <div id="profile-content"></div>
+      </div>
+    </section>
+
+    <!-- SC-07 ユーザー検索画面 -->
+    <section id="screen-search" class="screen feed-screen">
+      <div class="feed-container">
+        <div class="feed-header">
+          <h2>ユーザー検索</h2>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="search-input" placeholder="ユーザー名で検索..." autocomplete="off">
+        </div>
+        <div id="search-results" class="user-list"></div>
+      </div>
+    </section>
+
+    <!-- SC-08 フォロー/フォロワー一覧画面 -->
+    <section id="screen-follows" class="screen feed-screen">
+      <div class="feed-container">
+        <div class="feed-header">
+          <button class="back-btn" onclick="history.back()">
+            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            戻る
+          </button>
+          <h2 id="follows-title">フォロー / フォロワー</h2>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active" id="tab-following" data-tab="following">フォロー中</button>
+          <button class="tab-btn" id="tab-followers" data-tab="followers">フォロワー</button>
+        </div>
+        <div id="follows-list" class="user-list"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 削除確認モーダル -->
+  <div id="confirm-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 id="modal-title">確認</h3>
+      <p id="modal-message">本当に削除しますか？</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modal-cancel">キャンセル</button>
+        <button class="btn btn-danger" id="modal-confirm">削除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
