@@ -1,6 +1,7 @@
 # Java / Spring Boot
 *.class
 *.jar
+!**/gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
 *.nar
@@ -9,9 +10,6 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 .gradle/
-gradle/
-!**/src/main/**/gradle/
-!**/src/test/**/gradle/
 
 # IntelliJ IDEA
 .idea/
