@@ -2,13 +2,54 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { removeTokens, getUserId, getAccessToken } from "@/lib/auth";
+import { removeTokens, getUserId, getAccessToken, getRefreshToken, setAccessToken } from "@/lib/auth";
 import { fetchTimeline, createPost, updatePost, deletePost, type Post } from "@/lib/posts";
 import PostForm from "@/app/components/PostForm";
 import PostCard from "@/app/components/PostCard";
+import axios from "axios";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api";
 const PAGE_SIZE = 20;
+
+function createSseConnection(
+  token: string,
+  onNewPost: (post: Post) => void,
+  onTokenExpired: () => Promise<string | null>
+): () => void {
+  let source: EventSource | null = null;
+  let closed = false;
+  let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  const connect = (accessToken: string) => {
+    if (closed) return;
+    source = new EventSource(`${API_URL}/posts/stream?token=${encodeURIComponent(accessToken)}`);
+
+    source.addEventListener("new-post", (e) => {
+      const post: Post = JSON.parse(e.data);
+      onNewPost(post);
+    });
+
+    source.onerror = async () => {
+      source?.close();
+      source = null;
+      if (closed) return;
+
+      // トークン期限切れの可能性 → リフレッシュして再接続
+      const newToken = await onTokenExpired();
+      if (!newToken) return;
+
+      retryTimeout = setTimeout(() => connect(newToken), 3000);
+    };
+  };
+
+  connect(token);
+
+  return () => {
+    closed = true;
+    if (retryTimeout) clearTimeout(retryTimeout);
+    source?.close();
+  };
+}
 
 export default function HomePage() {
   const router = useRouter();
@@ -38,27 +79,44 @@ export default function HomePage() {
     loadInitial();
   }, [loadInitial]);
 
-  // SSE でリアルタイム受信 → バッファに蓄積
+  // SSE リアルタイム受信 → バッファに蓄積（トークン期限切れ時は自動再接続）
   useEffect(() => {
     const token = getAccessToken();
     if (!token) return;
 
-    const source = new EventSource(`${API_URL}/posts/stream?token=${encodeURIComponent(token)}`);
+    const handleTokenExpired = async (): Promise<string | null> => {
+      const refreshToken = getRefreshToken();
+      if (!refreshToken) {
+        removeTokens();
+        router.push("/login");
+        return null;
+      }
+      try {
+        const res = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
+        const { accessToken } = res.data;
+        setAccessToken(accessToken);
+        return accessToken;
+      } catch {
+        removeTokens();
+        router.push("/login");
+        return null;
+      }
+    };
 
-    source.addEventListener("new-post", (e) => {
-      const newPost: Post = JSON.parse(e.data);
-      // 自分の投稿（handleCreate で既に追加済み）は除外
-      if (newPost.userId === currentUserId) return;
-      setNewPostsBuffer((prev) => {
-        if (prev.some((p) => p.id === newPost.id)) return prev;
-        return [newPost, ...prev];
-      });
-    });
+    const cleanup = createSseConnection(
+      token,
+      (newPost) => {
+        if (newPost.userId === currentUserId) return;
+        setNewPostsBuffer((prev) => {
+          if (prev.some((p) => p.id === newPost.id)) return prev;
+          return [newPost, ...prev];
+        });
+      },
+      handleTokenExpired
+    );
 
-    source.onerror = () => source.close();
-
-    return () => source.close();
-  }, [currentUserId]);
+    return cleanup;
+  }, [currentUserId, router]);
 
   // 無限スクロール（IntersectionObserver）
   useEffect(() => {
