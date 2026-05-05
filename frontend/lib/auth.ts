@@ -1,6 +1,7 @@
 const ACCESS_TOKEN_KEY = "raisetimeline_access_token";
 const REFRESH_TOKEN_KEY = "raisetimeline_refresh_token";
 const USER_ID_KEY = "raisetimeline_user_id";
+const USERNAME_KEY = "raisetimeline_username";
 
 export const getAccessToken = (): string | null => {
   if (typeof window === "undefined") return null;
@@ -37,10 +38,21 @@ export const getUserId = (): number | null => {
   return v ? Number(v) : null;
 };
 
+export const setUsername = (username: string): void => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(USERNAME_KEY, username);
+};
+
+export const getUsername = (): string | null => {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(USERNAME_KEY);
+};
+
 export const removeTokens = (): void => {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
   localStorage.removeItem(USER_ID_KEY);
+  localStorage.removeItem(USERNAME_KEY);
   document.cookie = `${ACCESS_TOKEN_KEY}=; path=/; max-age=0`;
 };
 

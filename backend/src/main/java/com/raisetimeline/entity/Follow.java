@@ -11,12 +11,9 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Post {
-
+public class Follow {
     private Long id;
-    private Long userId;
-    private String content;
-    private String imageUrl;
+    private Long followerId;
+    private Long followingId;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }
