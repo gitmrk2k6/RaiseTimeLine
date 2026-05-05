@@ -10,6 +10,9 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,20 +23,22 @@ public class S3UploadService {
     private static final List<String> ALLOWED_TYPES = List.of("image/jpeg", "image/png", "image/gif");
     private static final long MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
+    private static final Path LOCAL_UPLOAD_DIR =
+            Paths.get(System.getProperty("java.io.tmpdir"), "raisetimeline-uploads");
+
     @Value("${app.s3.bucket}")
     private String bucket;
 
     @Value("${app.s3.region}")
     private String region;
 
-    @Value("${app.s3.mock-url}")
-    private String mockUrl;
+    @Value("${app.s3.local-base-url}")
+    private String localBaseUrl;
 
     public String upload(MultipartFile file) {
         validate(file);
         if (bucket.isBlank()) {
-            log.debug("S3_BUCKET not configured — returning mock URL");
-            return mockUrl;
+            return saveLocally(file);
         }
         return uploadToS3(file);
     }
@@ -48,9 +53,22 @@ public class S3UploadService {
         }
     }
 
+    private String saveLocally(MultipartFile file) {
+        String ext = getExtension(file.getContentType());
+        String filename = UUID.randomUUID() + "." + ext;
+        try {
+            Files.createDirectories(LOCAL_UPLOAD_DIR);
+            Files.copy(file.getInputStream(), LOCAL_UPLOAD_DIR.resolve(filename));
+        } catch (IOException e) {
+            throw new RuntimeException("ローカルへの画像保存に失敗しました", e);
+        }
+        log.debug("Saved file locally: {}", filename);
+        return localBaseUrl + "/api/files/" + filename;
+    }
+
     private String uploadToS3(MultipartFile file) {
         String ext = getExtension(file.getContentType());
-        String key = "posts/" + UUID.randomUUID() + "." + ext;
+        String key = "uploads/" + UUID.randomUUID() + "." + ext;
         try {
             S3Client s3 = S3Client.builder().region(Region.of(region)).build();
             s3.putObject(

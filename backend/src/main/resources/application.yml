@@ -20,7 +20,7 @@ app:
   s3:
     bucket: "${S3_BUCKET:}"
     region: "${AWS_REGION:ap-northeast-1}"
-    mock-url: "https://placehold.co/600x400/EEE/999?text=Image"
+    local-base-url: "${LOCAL_BASE_URL:http://localhost:8080}"
 
 server:
   port: 8080
