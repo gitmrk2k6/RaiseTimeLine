@@ -1,8 +1,10 @@
 package com.raisetimeline.mapper;
 
+import com.raisetimeline.dto.UserResponse;
 import com.raisetimeline.entity.User;
 import org.apache.ibatis.annotations.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @Mapper
@@ -23,4 +25,12 @@ public interface UserMapper {
 
     @Select("SELECT COUNT(*) > 0 FROM users WHERE username = #{username}")
     boolean existsByUsername(String username);
+
+    List<UserResponse> searchByUsername(
+            @Param("query") String query,
+            @Param("currentUserId") Long currentUserId);
+
+    UserResponse findProfileById(
+            @Param("id") Long id,
+            @Param("currentUserId") Long currentUserId);
 }

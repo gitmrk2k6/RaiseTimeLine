@@ -7,6 +7,7 @@
     <resultMap id="PostResponseMap" type="com.raisetimeline.dto.PostResponse">
         <result property="id"                  column="id"/>
         <result property="content"             column="content"/>
+        <result property="imageUrl"            column="image_url"/>
         <result property="createdAt"           column="created_at"/>
         <result property="updatedAt"           column="updated_at"/>
         <result property="userId"              column="user_id"/>
@@ -16,6 +17,11 @@
         <result property="commentCount"        column="comment_count"/>
         <result property="likedByCurrentUser"  column="liked_by_current_user"/>
     </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO posts (user_id, content, image_url)
+        VALUES (#{userId}, #{content}, #{imageUrl})
+    </insert>
 
     <!--
         N+1 解消: いいね数・コメント数・いいね済み判定を集計サブクエリで 1 クエリにまとめる。
@@ -27,6 +33,7 @@
         SELECT
             p.id,
             p.content,
+            p.image_url,
             p.created_at,
             p.updated_at,
             p.user_id,
@@ -65,6 +72,7 @@
         SELECT
             p.id,
             p.content,
+            p.image_url,
             p.created_at,
             p.updated_at,
             p.user_id,
@@ -91,6 +99,44 @@
             WHERE user_id = #{userId}
         ) ul ON ul.post_id = p.id
         WHERE p.id = #{id}
+    </select>
+
+    <select id="findByUserId" resultMap="PostResponseMap">
+        SELECT
+            p.id,
+            p.content,
+            p.image_url,
+            p.created_at,
+            p.updated_at,
+            p.user_id,
+            u.username,
+            u.profile_image_url,
+            COALESCE(lc.like_count,    0)     AS like_count,
+            COALESCE(cc.comment_count, 0)     AS comment_count,
+            COALESCE(ul.liked,         false) AS liked_by_current_user
+        FROM posts p
+        JOIN users u ON u.id = p.user_id
+        LEFT JOIN (
+            SELECT post_id, COUNT(*) AS like_count
+            FROM likes
+            GROUP BY post_id
+        ) lc ON lc.post_id = p.id
+        LEFT JOIN (
+            SELECT post_id, COUNT(*) AS comment_count
+            FROM comments
+            GROUP BY post_id
+        ) cc ON cc.post_id = p.id
+        LEFT JOIN (
+            SELECT post_id, true AS liked
+            FROM likes
+            WHERE user_id = #{userId}
+        ) ul ON ul.post_id = p.id
+        WHERE p.user_id = #{targetUserId}
+        <if test="before != null">
+            AND p.created_at &lt; #{before}
+        </if>
+        ORDER BY p.created_at DESC
+        LIMIT #{limit}
     </select>
 
 </mapper>

@@ -18,9 +18,13 @@ public interface PostMapper {
 
     PostResponse findByIdWithUser(@Param("id") Long id, @Param("userId") Long userId);
 
-    @Insert("INSERT INTO posts (user_id, content) VALUES (#{userId}, #{content})")
-    @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(Post post);
+
+    List<PostResponse> findByUserId(
+            @Param("targetUserId") Long targetUserId,
+            @Param("before") LocalDateTime before,
+            @Param("limit") int limit,
+            @Param("userId") Long userId);
 
     @Select("SELECT * FROM posts WHERE id = #{id}")
     Optional<Post> findById(Long id);

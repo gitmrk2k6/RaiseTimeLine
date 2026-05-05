@@ -3,6 +3,7 @@ import api from "@/lib/api";
 export interface Post {
   id: number;
   content: string;
+  imageUrl: string | null;
   createdAt: string;
   updatedAt: string;
   userId: number;
@@ -34,8 +35,14 @@ export const fetchTimeline = (before?: string, limit = 20): Promise<Post[]> =>
     .get("/posts", { params: { ...(before ? { before } : {}), limit } })
     .then((res) => res.data);
 
-export const createPost = (content: string): Promise<Post> =>
-  api.post("/posts", { content }).then((res) => res.data);
+export const createPost = (content: string, image?: File): Promise<Post> => {
+  const form = new FormData();
+  form.append("content", content);
+  if (image) form.append("image", image);
+  return api
+    .post("/posts", form, { headers: { "Content-Type": "multipart/form-data" } })
+    .then((res) => res.data);
+};
 
 export const updatePost = (id: number, content: string): Promise<Post> =>
   api.put(`/posts/${id}`, { content }).then((res) => res.data);

@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
@@ -41,9 +42,11 @@ public class PostController {
         return postSseService.addEmitter();
     }
 
-    @PostMapping
-    public ResponseEntity<PostResponse> createPost(@Valid @RequestBody PostRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(postService.createPost(request));
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PostResponse> createPost(
+            @RequestPart("content") String content,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(postService.createPost(content, image));
     }
 
     @PutMapping("/{id}")

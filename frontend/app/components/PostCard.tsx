@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { Post } from "@/lib/posts";
 import { likePost, unlikePost } from "@/lib/posts";
 import CommentSection from "@/app/components/CommentSection";
@@ -103,7 +104,7 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-sm text-gray-900">{post.username}</span>
+                <Link href={`/profile/${post.userId}`} className="font-semibold text-sm text-gray-900 hover:underline">{post.username}</Link>
                 <span className="text-xs text-gray-400">{formattedDate}</span>
               </div>
               {isOwner && !isEditing && (
@@ -127,6 +128,14 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
                 </div>
               )}
             </div>
+
+            {post.imageUrl && !isEditing && (
+              <img
+                src={post.imageUrl}
+                alt="投稿画像"
+                className="mt-2 rounded-lg max-h-80 object-cover w-full"
+              />
+            )}
 
             {isEditing ? (
               <div className="mt-2">

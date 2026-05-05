@@ -13,6 +13,7 @@ public class PostResponse {
 
     private Long id;
     private String content;
+    private String imageUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long userId;
