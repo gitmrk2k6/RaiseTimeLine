@@ -2,23 +2,32 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { updateProfile } from "@/lib/users";
-import { getUserId, getUsername, setUsername } from "@/lib/auth";
+import { getProfile, updateProfile } from "@/lib/users";
+import { getUserId, setUsername } from "@/lib/auth";
 
 export default function ProfileEditPage() {
   const router = useRouter();
   const currentUserId = getUserId();
-  const [usernameVal, setUsernameVal] = useState(getUsername() ?? "");
+  const [usernameVal, setUsernameVal] = useState("");
+  const [bio, setBio] = useState("");
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!currentUserId) {
       router.replace("/login");
+      return;
     }
+    getProfile(currentUserId).then((profile) => {
+      setUsernameVal(profile.username);
+      setBio(profile.bio ?? "");
+      setCurrentImageUrl(profile.profileImageUrl);
+    }).finally(() => setInitialLoading(false));
   }, [currentUserId, router]);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,6 +46,12 @@ export default function ProfileEditPage() {
     setPreview(URL.createObjectURL(file));
   };
 
+  const removeImage = () => {
+    setImage(null);
+    setPreview(null);
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!usernameVal.trim()) {
@@ -46,7 +61,7 @@ export default function ProfileEditPage() {
     setLoading(true);
     setError(null);
     try {
-      await updateProfile(usernameVal.trim(), image ?? undefined);
+      await updateProfile(usernameVal.trim(), bio, image ?? undefined);
       setUsername(usernameVal.trim());
       router.push(`/profile/${currentUserId}`);
     } catch {
@@ -55,6 +70,16 @@ export default function ProfileEditPage() {
       setLoading(false);
     }
   };
+
+  const displayImage = preview ?? currentImageUrl;
+
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -81,8 +106,8 @@ export default function ProfileEditPage() {
               className="w-20 h-20 rounded-full overflow-hidden bg-blue-500 flex items-center justify-center cursor-pointer"
               onClick={() => fileRef.current?.click()}
             >
-              {preview ? (
-                <img src={preview} alt="プレビュー" className="w-full h-full object-cover" />
+              {displayImage ? (
+                <img src={displayImage} alt="プロフィール画像" className="w-full h-full object-cover" />
               ) : (
                 <span className="text-white text-2xl font-bold">
                   {usernameVal.charAt(0).toUpperCase() || "?"}
@@ -106,10 +131,10 @@ export default function ProfileEditPage() {
             {preview && (
               <button
                 type="button"
-                onClick={() => { setImage(null); setPreview(null); if (fileRef.current) fileRef.current.value = ""; }}
+                onClick={removeImage}
                 className="text-xs text-red-400 hover:underline"
               >
-                画像を削除
+                選択した画像を削除
               </button>
             )}
           </div>
@@ -126,6 +151,20 @@ export default function ProfileEditPage() {
               placeholder="ユーザー名"
             />
             <p className="mt-1 text-xs text-gray-400 text-right">{usernameVal.length} / 50</p>
+          </div>
+
+          {/* 自己紹介 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">自己紹介</label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              maxLength={160}
+              rows={4}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              placeholder="自己紹介を入力（160文字以内）"
+            />
+            <p className="mt-1 text-xs text-gray-400 text-right">{bio.length} / 160</p>
           </div>
 
           {error && <p className="text-sm text-red-500 text-center">{error}</p>}

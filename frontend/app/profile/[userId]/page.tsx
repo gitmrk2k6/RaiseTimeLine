@@ -167,6 +167,10 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          {profile.bio && (
+            <p className="text-sm text-gray-700 whitespace-pre-wrap">{profile.bio}</p>
+          )}
+
           {isOwnProfile ? (
             <Link
               href="/profile/edit"

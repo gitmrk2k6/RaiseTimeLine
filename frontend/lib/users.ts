@@ -5,6 +5,7 @@ export interface UserProfile {
   id: number;
   username: string;
   profileImageUrl: string | null;
+  bio: string | null;
   followerCount: number;
   followingCount: number;
   isFollowing: boolean;
@@ -45,9 +46,10 @@ export const getFollowers = (userId: number): Promise<UserProfile[]> =>
 export const getFollowing = (userId: number): Promise<UserProfile[]> =>
   api.get(`/users/${userId}/following`).then((r) => r.data);
 
-export const updateProfile = (username: string, image?: File): Promise<UserProfile> => {
+export const updateProfile = (username: string, bio: string, image?: File): Promise<UserProfile> => {
   const form = new FormData();
   form.append("username", username);
+  form.append("bio", bio);
   if (image) form.append("image", image);
   return api
     .put("/users/me", form, { headers: { "Content-Type": "multipart/form-data" } })

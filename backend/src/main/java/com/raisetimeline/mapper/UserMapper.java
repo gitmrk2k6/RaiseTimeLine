@@ -38,11 +38,13 @@ public interface UserMapper {
             UPDATE users
             SET username = #{username},
                 profile_image_url = #{profileImageUrl},
+                bio = #{bio},
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = #{id}
             """)
     void updateProfile(
             @Param("id") Long id,
             @Param("username") String username,
-            @Param("profileImageUrl") String profileImageUrl);
+            @Param("profileImageUrl") String profileImageUrl,
+            @Param("bio") String bio);
 }

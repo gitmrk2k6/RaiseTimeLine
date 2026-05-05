@@ -70,9 +70,10 @@ public class UserController {
     @PutMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserResponse> updateProfile(
             @RequestParam String username,
+            @RequestParam(required = false) String bio,
             @RequestPart(value = "image", required = false) MultipartFile image,
             Authentication auth) {
         User user = (User) auth.getPrincipal();
-        return ResponseEntity.ok(userService.updateProfile(user.getId(), username, image));
+        return ResponseEntity.ok(userService.updateProfile(user.getId(), username, bio, image));
     }
 }

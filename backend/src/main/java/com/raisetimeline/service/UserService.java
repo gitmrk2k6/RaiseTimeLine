@@ -36,12 +36,15 @@ public class UserService {
         return postMapper.findByUserId(userId, before, limit, currentUserId);
     }
 
-    public UserResponse updateProfile(Long userId, String username, MultipartFile image) {
+    public UserResponse updateProfile(Long userId, String username, String bio, MultipartFile image) {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("ユーザー名を入力してください");
         }
         if (username.length() > 50) {
             throw new IllegalArgumentException("ユーザー名は50文字以内で入力してください");
+        }
+        if (bio != null && bio.length() > 160) {
+            throw new IllegalArgumentException("自己紹介は160文字以内で入力してください");
         }
 
         String currentImageUrl = userMapper.findProfileById(userId, userId).getProfileImageUrl();
@@ -49,7 +52,7 @@ public class UserService {
                 ? s3UploadService.upload(image)
                 : currentImageUrl;
 
-        userMapper.updateProfile(userId, username.trim(), imageUrl);
+        userMapper.updateProfile(userId, username.trim(), imageUrl, bio);
         return userMapper.findProfileById(userId, userId);
     }
 }
