@@ -167,7 +167,14 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {!isOwnProfile && (
+          {isOwnProfile ? (
+            <Link
+              href="/profile/edit"
+              className="block w-full text-center text-sm font-semibold py-2 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              プロフィールを編集
+            </Link>
+          ) : (
             <button
               onClick={handleToggleFollow}
               disabled={followLoading}

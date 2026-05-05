@@ -7,9 +7,11 @@ import com.raisetimeline.service.FollowService;
 import com.raisetimeline.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -63,5 +65,14 @@ public class UserController {
             Authentication auth) {
         User user = (User) auth.getPrincipal();
         return ResponseEntity.ok(followService.getFollowing(id, user.getId()));
+    }
+
+    @PutMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserResponse> updateProfile(
+            @RequestParam String username,
+            @RequestPart(value = "image", required = false) MultipartFile image,
+            Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        return ResponseEntity.ok(userService.updateProfile(user.getId(), username, image));
     }
 }

@@ -44,3 +44,12 @@ export const getFollowers = (userId: number): Promise<UserProfile[]> =>
 
 export const getFollowing = (userId: number): Promise<UserProfile[]> =>
   api.get(`/users/${userId}/following`).then((r) => r.data);
+
+export const updateProfile = (username: string, image?: File): Promise<UserProfile> => {
+  const form = new FormData();
+  form.append("username", username);
+  if (image) form.append("image", image);
+  return api
+    .put("/users/me", form, { headers: { "Content-Type": "multipart/form-data" } })
+    .then((r) => r.data);
+};
