@@ -16,8 +16,10 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [newPostsBuffer, setNewPostsBuffer] = useState<Post[]>([]);
   const currentUserId = getUserId();
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
   const loadingMoreRef = useRef(false);
 
   const loadInitial = useCallback(async () => {
@@ -36,7 +38,7 @@ export default function HomePage() {
     loadInitial();
   }, [loadInitial]);
 
-  // SSE でリアルタイム更新
+  // SSE でリアルタイム受信 → バッファに蓄積
   useEffect(() => {
     const token = getAccessToken();
     if (!token) return;
@@ -45,7 +47,9 @@ export default function HomePage() {
 
     source.addEventListener("new-post", (e) => {
       const newPost: Post = JSON.parse(e.data);
-      setPosts((prev) => {
+      // 自分の投稿（handleCreate で既に追加済み）は除外
+      if (newPost.userId === currentUserId) return;
+      setNewPostsBuffer((prev) => {
         if (prev.some((p) => p.id === newPost.id)) return prev;
         return [newPost, ...prev];
       });
@@ -54,7 +58,7 @@ export default function HomePage() {
     source.onerror = () => source.close();
 
     return () => source.close();
-  }, []);
+  }, [currentUserId]);
 
   // 無限スクロール（IntersectionObserver）
   useEffect(() => {
@@ -92,13 +96,23 @@ export default function HomePage() {
     };
   }, [hasMore, posts]);
 
+  const handleShowNewPosts = () => {
+    setPosts((prev) => {
+      const existingIds = new Set(prev.map((p) => p.id));
+      const toAdd = newPostsBuffer.filter((p) => !existingIds.has(p.id));
+      return [...toAdd, ...prev];
+    });
+    setNewPostsBuffer([]);
+    topRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const handleCreate = async (content: string) => {
     const newPost = await createPost(content);
-    // SSE で自分の投稿が届く前にローカルで先行追加（id 重複チェックで二重表示防止）
     setPosts((prev) => {
       if (prev.some((p) => p.id === newPost.id)) return prev;
       return [newPost, ...prev];
     });
+    topRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleUpdate = async (id: number, content: string) => {
@@ -130,7 +144,21 @@ export default function HomePage() {
         </div>
       </header>
 
+      {/* 新着通知バナー */}
+      {newPostsBuffer.length > 0 && (
+        <div className="sticky top-[57px] z-10 flex justify-center pt-2 px-4">
+          <button
+            onClick={handleShowNewPosts}
+            className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-full shadow-lg transition-colors animate-bounce"
+          >
+            {newPostsBuffer.length}件の新しい投稿があります
+          </button>
+        </div>
+      )}
+
       <main className="max-w-xl mx-auto px-4 py-4 space-y-4">
+        <div ref={topRef} />
+
         <PostForm onSubmit={handleCreate} />
 
         {error && (
