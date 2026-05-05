@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.raisetimeline.mapper.CommentMapper">
+
+    <resultMap id="CommentResponseMap" type="com.raisetimeline.dto.CommentResponse">
+        <result property="id"              column="id"/>
+        <result property="postId"          column="post_id"/>
+        <result property="userId"          column="user_id"/>
+        <result property="username"        column="username"/>
+        <result property="profileImageUrl" column="profile_image_url"/>
+        <result property="content"         column="content"/>
+        <result property="createdAt"       column="created_at"/>
+    </resultMap>
+
+    <!-- N+1 解消: users を JOIN して 1 クエリでユーザー情報も取得 -->
+    <select id="findByPostId" resultMap="CommentResponseMap">
+        SELECT c.id, c.post_id, c.user_id,
+               u.username, u.profile_image_url,
+               c.content, c.created_at
+        FROM comments c
+        JOIN users u ON u.id = c.user_id
+        WHERE c.post_id = #{postId}
+        ORDER BY c.created_at ASC
+    </select>
+
+    <select id="findResponseById" resultMap="CommentResponseMap">
+        SELECT c.id, c.post_id, c.user_id,
+               u.username, u.profile_image_url,
+               c.content, c.created_at
+        FROM comments c
+        JOIN users u ON u.id = c.user_id
+        WHERE c.id = #{id}
+    </select>
+
+</mapper>

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { Post } from "@/lib/posts";
+import { likePost, unlikePost } from "@/lib/posts";
+import CommentSection from "@/app/components/CommentSection";
 
 interface PostCardProps {
   post: Post;
@@ -15,6 +17,11 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
   const [editContent, setEditContent] = useState(post.content);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [likeCount, setLikeCount] = useState(post.likeCount);
+  const [likedByCurrentUser, setLikedByCurrentUser] = useState(post.likedByCurrentUser);
+  const [commentCount, setCommentCount] = useState(post.commentCount);
+  const [showComments, setShowComments] = useState(false);
 
   const isOwner = post.userId === currentUserId;
   const remaining = 280 - editContent.length;
@@ -41,6 +48,18 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
     } catch {
       setError("削除に失敗しました");
       setLoading(false);
+    }
+  };
+
+  const handleToggleLike = async () => {
+    try {
+      const result = likedByCurrentUser
+        ? await unlikePost(post.id)
+        : await likePost(post.id);
+      setLikeCount(result.likeCount);
+      setLikedByCurrentUser(result.likedByCurrentUser);
+    } catch {
+      // サイレントに失敗 — UI は変更前の状態を維持
     }
   };
 
@@ -128,6 +147,64 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
             </div>
           ) : (
             <p className="mt-1 text-sm text-gray-800 whitespace-pre-wrap break-words">{post.content}</p>
+          )}
+
+          {!isEditing && (
+            <div className="mt-3 flex items-center gap-4">
+              <button
+                onClick={handleToggleLike}
+                className={`flex items-center gap-1 text-xs transition-colors ${
+                  likedByCurrentUser
+                    ? "text-red-500 hover:text-red-600"
+                    : "text-gray-400 hover:text-red-400"
+                }`}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill={likedByCurrentUser ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  className="w-4 h-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                  />
+                </svg>
+                <span>{likeCount}</span>
+              </button>
+
+              <button
+                onClick={() => setShowComments((prev) => !prev)}
+                className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-500 transition-colors"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-4 h-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
+                  />
+                </svg>
+                <span>{commentCount}</span>
+              </button>
+            </div>
+          )}
+
+          {showComments && (
+            <CommentSection
+              postId={post.id}
+              currentUserId={currentUserId}
+              onCommentCountChange={(delta) => setCommentCount((c) => c + delta)}
+            />
           )}
 
           {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
