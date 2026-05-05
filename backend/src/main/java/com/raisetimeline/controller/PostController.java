@@ -2,6 +2,7 @@ package com.raisetimeline.controller;
 
 import com.raisetimeline.dto.PostRequest;
 import com.raisetimeline.dto.PostResponse;
+import com.raisetimeline.entity.User;
 import com.raisetimeline.service.PostService;
 import com.raisetimeline.service.PostSseService;
 import jakarta.validation.Valid;
@@ -10,6 +11,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -28,8 +30,10 @@ public class PostController {
     public ResponseEntity<List<PostResponse>> getTimeline(
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime before,
-            @RequestParam(defaultValue = "20") int limit) {
-        return ResponseEntity.ok(postService.getTimeline(before, limit));
+            @RequestParam(defaultValue = "20") int limit,
+            Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(postService.getTimeline(before, limit, user.getId()));
     }
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)

@@ -22,8 +22,8 @@ public class PostService {
     private final PostMapper postMapper;
     private final PostSseService postSseService;
 
-    public List<PostResponse> getTimeline(LocalDateTime before, int limit) {
-        return postMapper.findAll(before, limit);
+    public List<PostResponse> getTimeline(LocalDateTime before, int limit, Long currentUserId) {
+        return postMapper.findAll(before, limit, currentUserId);
     }
 
     @Transactional
@@ -34,7 +34,7 @@ public class PostService {
                 .content(request.getContent())
                 .build();
         postMapper.insert(post);
-        PostResponse response = postMapper.findByIdWithUser(post.getId());
+        PostResponse response = postMapper.findByIdWithUser(post.getId(), currentUserId);
         postSseService.broadcast(response);
         return response;
     }
@@ -49,7 +49,7 @@ public class PostService {
         }
         post.setContent(request.getContent());
         postMapper.update(post);
-        return postMapper.findByIdWithUser(id);
+        return postMapper.findByIdWithUser(id, currentUserId);
     }
 
     @Transactional
