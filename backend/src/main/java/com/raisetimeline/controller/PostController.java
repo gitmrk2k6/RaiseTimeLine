@@ -29,12 +29,16 @@ public class PostController {
 
     @GetMapping
     public ResponseEntity<List<PostResponse>> getTimeline(
+            @RequestParam(defaultValue = "false") boolean followingOnly,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime before,
             @RequestParam(defaultValue = "20") int limit,
             Authentication authentication) {
         User user = (User) authentication.getPrincipal();
-        return ResponseEntity.ok(postService.getTimeline(before, limit, user.getId()));
+        List<PostResponse> posts = followingOnly
+                ? postService.getFollowingTimeline(before, limit, user.getId())
+                : postService.getTimeline(before, limit, user.getId());
+        return ResponseEntity.ok(posts);
     }
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)

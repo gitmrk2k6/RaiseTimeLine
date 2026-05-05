@@ -28,6 +28,10 @@ public class PostService {
         return postMapper.findAll(before, limit, currentUserId);
     }
 
+    public List<PostResponse> getFollowingTimeline(LocalDateTime before, int limit, Long currentUserId) {
+        return postMapper.findFollowingTimeline(before, limit, currentUserId);
+    }
+
     @Transactional
     public PostResponse createPost(String content, MultipartFile image) {
         if (content == null || content.isBlank()) {
