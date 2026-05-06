@@ -123,7 +123,7 @@ export default function CommentSection({
             onChange={(e) => setNewContent(e.target.value)}
             placeholder="コメントを入力..."
             rows={2}
-            className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 resize-none"
+            className="flex-1 text-xs text-gray-900 border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 resize-none"
           />
           <div className="flex flex-col items-end gap-1">
             <span className={`text-xs ${remaining < 0 ? "text-red-500" : "text-gray-400"}`}>

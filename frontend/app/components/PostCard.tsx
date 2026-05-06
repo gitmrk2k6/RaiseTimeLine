@@ -143,7 +143,7 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   rows={3}
-                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full text-sm text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
                 <div className="flex items-center justify-between mt-1">
                   <span className={`text-xs ${remaining < 0 ? "text-red-500" : "text-gray-400"}`}>
