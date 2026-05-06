@@ -45,6 +45,7 @@ erDiagram
         varchar email UK "メールアドレス"
         varchar password_digest "ハッシュ化パスワード"
         varchar profile_image_url "プロフィール画像URL（S3）"
+        varchar bio "自己紹介文（任意）"
         timestamp created_at "作成日時"
         timestamp updated_at "更新日時"
     }
@@ -64,7 +65,6 @@ erDiagram
         bigint user_id FK "コメント者（users.id）"
         text content "コメントテキスト（最大140文字）"
         timestamp created_at "作成日時"
-        timestamp updated_at "更新日時"
     }
 
     LIKES {
@@ -95,6 +95,7 @@ erDiagram
 | email | VARCHAR(255) | NOT NULL | UK | - | メールアドレス |
 | password_digest | VARCHAR(255) | NOT NULL | - | - | Bcryptハッシュ化パスワード |
 | profile_image_url | VARCHAR(1000) | NULL | - | NULL | プロフィール画像URL（S3） |
+| bio | VARCHAR(160) | NULL | - | NULL | 自己紹介文 |
 | created_at | TIMESTAMP | NOT NULL | - | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | NOT NULL | - | CURRENT_TIMESTAMP | 更新日時 |
 
@@ -118,7 +119,6 @@ erDiagram
 | user_id | BIGINT | NOT NULL | FK | - | コメント者（users.id） |
 | content | TEXT | NOT NULL | - | - | コメントテキスト（最大140文字） |
 | created_at | TIMESTAMP | NOT NULL | - | CURRENT_TIMESTAMP | 作成日時 |
-| updated_at | TIMESTAMP | NOT NULL | - | CURRENT_TIMESTAMP | 更新日時 |
 
 ### 3.4 likes（いいね）
 

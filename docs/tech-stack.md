@@ -13,7 +13,7 @@
 | MyBatis | 3.0.4 | ✅ 実装済み | SQL マッパー（JPA の代わりに採用） |
 | Flyway | 11.x | ✅ 実装済み | DB マイグレーション管理 |
 | Gradle | 8.x | ✅ 実装済み | ビルドツール（Kotlin DSL） |
-| AWS SDK for Java | 2.x | 🔲 未実装 | S3 への画像アップロード（F-05） |
+| AWS SDK for Java | 2.25.27 | ✅ 実装済み | S3UploadService 実装済み（ローカルフォールバックあり） |
 
 ## 2. フロントエンド
 
@@ -61,31 +61,49 @@ RaiseTimeLine/
 ├── backend/                     # Spring Boot プロジェクト
 │   └── src/main/
 │       ├── java/com/raisetimeline/
-│       │   ├── controller/      # AuthController, PostController, HealthController
-│       │   ├── service/         # AuthService, PostService, PostSseService
-│       │   ├── mapper/          # UserMapper, PostMapper（MyBatis）
-│       │   ├── entity/          # User, Post
-│       │   ├── dto/             # リクエスト/レスポンス DTO
-│       │   ├── exception/       # ForbiddenException, DuplicateResourceException, GlobalExceptionHandler
-│       │   ├── security/        # JwtUtil, JwtAuthenticationFilter, UserDetailsServiceImpl
+│       │   ├── controller/      # AuthController, PostController, CommentController,
+│       │   │                    # LikeController, FollowController, UserController,
+│       │   │                    # FileController, HealthController
+│       │   ├── service/         # AuthService, PostService, PostSseService,
+│       │   │                    # CommentService, LikeService, FollowService,
+│       │   │                    # UserService, S3UploadService
+│       │   ├── mapper/          # UserMapper, PostMapper, CommentMapper,
+│       │   │                    # LikeMapper, FollowMapper（MyBatis）
+│       │   ├── entity/          # User, Post, Comment, Like, Follow
+│       │   ├── dto/             # 各種 Request/Response DTO（11クラス）
+│       │   ├── exception/       # ForbiddenException, DuplicateResourceException,
+│       │   │                    # GlobalExceptionHandler
+│       │   ├── security/        # JwtUtil, JwtAuthenticationFilter,
+│       │   │                    # UserDetailsServiceImpl
 │       │   └── config/          # SecurityConfig
 │       └── resources/
 │           ├── application.yml
-│           ├── db/migration/    # Flyway マイグレーション（V1: users, V2: posts）
-│           └── mapper/          # PostMapper.xml（MyBatis XML）
+│           ├── db/migration/    # V1: users, V2: posts, V3: comments, V4: likes,
+│           │                    # V5: image_url, V6: follows, V7: bio
+│           └── mapper/          # UserMapper.xml, PostMapper.xml, CommentMapper.xml,
+│                                # LikeMapper.xml, FollowMapper.xml
 │
 ├── frontend/                    # Next.js プロジェクト
 │   ├── app/
-│   │   ├── home/page.tsx        # タイムライン（投稿一覧・SSE・無限スクロール）
+│   │   ├── page.tsx             # / → /login リダイレクト
 │   │   ├── login/page.tsx
 │   │   ├── register/page.tsx
+│   │   ├── home/page.tsx        # タイムライン（SSE・無限スクロール・フォロー中フィルター）
+│   │   ├── search/page.tsx      # ユーザー検索
+│   │   ├── profile/
+│   │   │   ├── [userId]/page.tsx         # プロフィール表示
+│   │   │   ├── [userId]/follows/page.tsx # フォロー/フォロワー一覧
+│   │   │   └── edit/page.tsx             # プロフィール編集
 │   │   └── components/
-│   │       ├── PostForm.tsx     # 投稿作成フォーム
-│   │       └── PostCard.tsx     # 投稿カード（編集・削除）
+│   │       ├── PostCard.tsx     # 投稿カード（編集・削除・いいね・コメントインライン）
+│   │       ├── PostForm.tsx     # 投稿作成フォーム（画像アップロード対応）
+│   │       ├── CommentSection.tsx # コメント一覧・作成・削除
+│   │       └── ConfirmModal.tsx   # 削除確認ダイアログ
 │   ├── lib/
 │   │   ├── api.ts               # Axios インスタンス（自動トークンリフレッシュ）
 │   │   ├── auth.ts              # トークン・userId 管理
-│   │   └── posts.ts             # 投稿 API 関数
+│   │   ├── posts.ts             # 投稿・コメント・いいね API 関数
+│   │   └── users.ts             # ユーザー・フォロー API 関数
 │   └── middleware.ts            # ルート保護（認証チェック）
 │
 └── docker-compose.yml           # ローカル開発用 PostgreSQL
