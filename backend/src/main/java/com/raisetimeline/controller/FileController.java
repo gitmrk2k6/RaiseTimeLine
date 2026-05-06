@@ -1,5 +1,8 @@
 package com.raisetimeline.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -18,6 +21,7 @@ import java.nio.file.Paths;
  */
 @RestController
 @RequestMapping("/api/files")
+@Tag(name = "File", description = "ファイル配信 API (ローカル開発専用)")
 public class FileController {
 
     private static final Path LOCAL_UPLOAD_DIR =
@@ -26,8 +30,13 @@ public class FileController {
     @Value("${app.s3.bucket}")
     private String bucket;
 
+    @Operation(
+            summary = "Serve uploaded file",
+            description = "ローカル開発専用。S3 未設定時にアップロードされたファイルを配信します。本番環境では使用されません。"
+    )
     @GetMapping("/{filename}")
-    public ResponseEntity<Resource> serve(@PathVariable String filename) {
+    public ResponseEntity<Resource> serve(
+            @Parameter(description = "ファイル名") @PathVariable String filename) {
         if (!bucket.isBlank()) {
             return ResponseEntity.notFound().build();
         }
