@@ -11,6 +11,8 @@ import axios from "axios";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api";
 const PAGE_SIZE = 20;
 
+type Tab = "all" | "following";
+
 function createSseConnection(
   token: string,
   onNewPost: (post: Post) => void,
@@ -34,7 +36,6 @@ function createSseConnection(
       source = null;
       if (closed) return;
 
-      // トークン期限切れの可能性 → リフレッシュして再接続
       const newToken = await onTokenExpired();
       if (!newToken) return;
 
@@ -53,19 +54,26 @@ function createSseConnection(
 
 export default function HomePage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<Tab>("all");
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newPostsBuffer, setNewPostsBuffer] = useState<Post[]>([]);
-  const currentUserId = getUserId();
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+
+  useEffect(() => {
+    setCurrentUserId(getUserId());
+  }, []);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
   const loadingMoreRef = useRef(false);
 
-  const loadInitial = useCallback(async () => {
+  const loadInitial = useCallback(async (tab: Tab) => {
+    setLoading(true);
+    setError(null);
     try {
-      const data = await fetchTimeline(undefined, PAGE_SIZE);
+      const data = await fetchTimeline(undefined, PAGE_SIZE, tab === "following");
       setPosts(data);
       setHasMore(data.length === PAGE_SIZE);
     } catch {
@@ -76,8 +84,12 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    loadInitial();
-  }, [loadInitial]);
+    setPosts([]);
+    setHasMore(true);
+    setNewPostsBuffer([]);
+    loadingMoreRef.current = false;
+    loadInitial(activeTab);
+  }, [activeTab, loadInitial]);
 
   // SSE リアルタイム受信 → バッファに蓄積（トークン期限切れ時は自動再接続）
   useEffect(() => {
@@ -129,7 +141,7 @@ export default function HomePage() {
         try {
           const last = posts[posts.length - 1];
           if (!last) return;
-          const older = await fetchTimeline(last.createdAt, PAGE_SIZE);
+          const older = await fetchTimeline(last.createdAt, PAGE_SIZE, activeTab === "following");
           if (older.length === 0) {
             setHasMore(false);
           } else {
@@ -152,15 +164,21 @@ export default function HomePage() {
     return () => {
       if (el) observer.unobserve(el);
     };
-  }, [hasMore, posts]);
+  }, [hasMore, posts, activeTab]);
 
   const handleShowNewPosts = () => {
-    setPosts((prev) => {
-      const existingIds = new Set(prev.map((p) => p.id));
-      const toAdd = newPostsBuffer.filter((p) => !existingIds.has(p.id));
-      return [...toAdd, ...prev];
-    });
-    setNewPostsBuffer([]);
+    if (activeTab === "following") {
+      // フォロー中モードはサーバーから再取得して正確なデータを表示
+      setNewPostsBuffer([]);
+      loadInitial(activeTab);
+    } else {
+      setPosts((prev) => {
+        const existingIds = new Set(prev.map((p) => p.id));
+        const toAdd = newPostsBuffer.filter((p) => !existingIds.has(p.id));
+        return [...toAdd, ...prev];
+      });
+      setNewPostsBuffer([]);
+    }
     topRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -219,11 +237,35 @@ export default function HomePage() {
             </button>
           </div>
         </div>
+
+        {/* タブ切り替え */}
+        <div className="max-w-xl mx-auto flex border-t border-gray-100">
+          <button
+            onClick={() => setActiveTab("all")}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+              activeTab === "all"
+                ? "text-blue-500 border-b-2 border-blue-500"
+                : "text-gray-500 hover:text-gray-700 border-b-2 border-transparent"
+            }`}
+          >
+            すべて
+          </button>
+          <button
+            onClick={() => setActiveTab("following")}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+              activeTab === "following"
+                ? "text-blue-500 border-b-2 border-blue-500"
+                : "text-gray-500 hover:text-gray-700 border-b-2 border-transparent"
+            }`}
+          >
+            フォロー中
+          </button>
+        </div>
       </header>
 
       {/* 新着通知バナー */}
       {newPostsBuffer.length > 0 && (
-        <div className="sticky top-[57px] z-10 flex justify-center pt-2 px-4">
+        <div className="sticky top-[97px] z-10 flex justify-center pt-2 px-4">
           <button
             onClick={handleShowNewPosts}
             className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-full shadow-lg transition-colors animate-bounce"
@@ -247,7 +289,11 @@ export default function HomePage() {
             <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : posts.length === 0 ? (
-          <p className="text-center text-gray-400 py-12">まだ投稿がありません。最初の投稿をしましょう！</p>
+          <p className="text-center text-gray-400 py-12">
+            {activeTab === "following"
+              ? "フォロー中のユーザーの投稿がありません。ユーザーをフォローしてみましょう！"
+              : "まだ投稿がありません。最初の投稿をしましょう！"}
+          </p>
         ) : (
           <div className="space-y-3">
             {posts.map((post) => (

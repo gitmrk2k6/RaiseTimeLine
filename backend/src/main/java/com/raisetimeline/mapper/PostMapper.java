@@ -26,6 +26,11 @@ public interface PostMapper {
             @Param("limit") int limit,
             @Param("userId") Long userId);
 
+    List<PostResponse> findFollowingTimeline(
+            @Param("before") LocalDateTime before,
+            @Param("limit")  int limit,
+            @Param("currentUserId") Long currentUserId);
+
     @Select("SELECT * FROM posts WHERE id = #{id}")
     Optional<Post> findById(Long id);
 

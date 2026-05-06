@@ -147,7 +147,7 @@ export default function ProfileEditPage() {
               value={usernameVal}
               onChange={(e) => setUsernameVal(e.target.value)}
               maxLength={50}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="ユーザー名"
             />
             <p className="mt-1 text-xs text-gray-400 text-right">{usernameVal.length} / 50</p>
@@ -161,7 +161,7 @@ export default function ProfileEditPage() {
               onChange={(e) => setBio(e.target.value)}
               maxLength={160}
               rows={4}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               placeholder="自己紹介を入力（160文字以内）"
             />
             <p className="mt-1 text-xs text-gray-400 text-right">{bio.length} / 160</p>

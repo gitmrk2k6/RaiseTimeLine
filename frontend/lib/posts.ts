@@ -30,9 +30,19 @@ export interface LikeResult {
   likedByCurrentUser: boolean;
 }
 
-export const fetchTimeline = (before?: string, limit = 20): Promise<Post[]> =>
+export const fetchTimeline = (
+  before?: string,
+  limit = 20,
+  followingOnly = false
+): Promise<Post[]> =>
   api
-    .get("/posts", { params: { ...(before ? { before } : {}), limit } })
+    .get("/posts", {
+      params: {
+        ...(before ? { before } : {}),
+        limit,
+        ...(followingOnly ? { followingOnly: true } : {}),
+      },
+    })
     .then((res) => res.data);
 
 export const createPost = (content: string, image?: File): Promise<Post> => {

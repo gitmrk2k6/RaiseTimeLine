@@ -101,6 +101,52 @@
         WHERE p.id = #{id}
     </select>
 
+    <!--
+        フォロー中タイムライン: 自分の投稿 + フォロー中ユーザーの投稿を返す。
+        UNION で自分の ID も含めることで自己投稿を混入させる。
+    -->
+    <select id="findFollowingTimeline" resultMap="PostResponseMap">
+        SELECT
+            p.id,
+            p.content,
+            p.image_url,
+            p.created_at,
+            p.updated_at,
+            p.user_id,
+            u.username,
+            u.profile_image_url,
+            COALESCE(lc.like_count,    0)     AS like_count,
+            COALESCE(cc.comment_count, 0)     AS comment_count,
+            COALESCE(ul.liked,         false) AS liked_by_current_user
+        FROM posts p
+        JOIN users u ON u.id = p.user_id
+        LEFT JOIN (
+            SELECT post_id, COUNT(*) AS like_count
+            FROM likes
+            GROUP BY post_id
+        ) lc ON lc.post_id = p.id
+        LEFT JOIN (
+            SELECT post_id, COUNT(*) AS comment_count
+            FROM comments
+            GROUP BY post_id
+        ) cc ON cc.post_id = p.id
+        LEFT JOIN (
+            SELECT post_id, true AS liked
+            FROM likes
+            WHERE user_id = #{currentUserId}
+        ) ul ON ul.post_id = p.id
+        WHERE p.user_id IN (
+            SELECT following_id FROM follows WHERE follower_id = #{currentUserId}
+            UNION
+            SELECT #{currentUserId}
+        )
+        <if test="before != null">
+            AND p.created_at &lt; #{before}
+        </if>
+        ORDER BY p.created_at DESC
+        LIMIT #{limit}
+    </select>
+
     <select id="findByUserId" resultMap="PostResponseMap">
         SELECT
             p.id,
