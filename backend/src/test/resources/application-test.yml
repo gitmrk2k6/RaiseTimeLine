@@ -1,0 +1,25 @@
+spring:
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  datasource:
+    url: jdbc:tc:postgresql:17:///testdb
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    username: test
+    password: test
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+app:
+  jwt:
+    secret: "test-secret-key-for-testing-purposes-only-must-be-at-least-256bits-long-enough"
+    access-expiration-ms: 900000
+    refresh-expiration-ms: 604800000
+  s3:
+    bucket: ""
+    region: ap-northeast-1
+    local-base-url: http://localhost:8080
+    local-upload-dir: /tmp/raisetimeline-test
