@@ -59,10 +59,11 @@ public class S3UploadService {
         try {
             Files.createDirectories(LOCAL_UPLOAD_DIR);
             Files.copy(file.getInputStream(), LOCAL_UPLOAD_DIR.resolve(filename));
+            log.info("File saved locally: filename={}, size={}bytes", filename, file.getSize());
         } catch (IOException e) {
+            log.error("Failed to save file locally: filename={}", filename, e);
             throw new RuntimeException("ローカルへの画像保存に失敗しました", e);
         }
-        log.debug("Saved file locally: {}", filename);
         return localBaseUrl + "/api/files/" + filename;
     }
 
@@ -79,7 +80,9 @@ public class S3UploadService {
                     .build(),
                 RequestBody.fromBytes(file.getBytes())
             );
+            log.info("Uploaded to S3: bucket={}, key={}, size={}bytes", bucket, key, file.getSize());
         } catch (IOException e) {
+            log.error("Failed to upload to S3: bucket={}, key={}", bucket, key, e);
             throw new RuntimeException("画像のアップロードに失敗しました", e);
         }
         return "https://" + bucket + ".s3." + region + ".amazonaws.com/" + key;

@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -17,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Collections;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -30,15 +32,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         String token = extractToken(request);
 
-        if (token != null && jwtUtil.isAccessToken(token)) {
-            Long userId = jwtUtil.extractUserId(token);
-            User user = userMapper.findById(userId).orElse(null);
+        if (token != null) {
+            try {
+                if (jwtUtil.isAccessToken(token)) {
+                    Long userId = jwtUtil.extractUserId(token);
+                    User user = userMapper.findById(userId).orElse(null);
 
-            if (user != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
-                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                    if (user == null) {
+                        log.warn("JWT token valid but user not found in DB: userId={}", userId);
+                    } else if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                        UsernamePasswordAuthenticationToken auth =
+                                new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
+                        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                        log.debug("JWT authentication successful: userId={}", userId);
+                    }
+                } else {
+                    log.debug("Token present but not a valid access token: path={}", request.getRequestURI());
+                }
+            } catch (Exception e) {
+                log.warn("JWT processing failed: path={}, reason={}", request.getRequestURI(), e.getMessage());
             }
         }
 

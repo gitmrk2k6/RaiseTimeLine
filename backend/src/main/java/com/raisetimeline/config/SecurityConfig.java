@@ -2,6 +2,7 @@ package com.raisetimeline.config;
 
 import com.raisetimeline.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -23,6 +24,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -48,11 +50,13 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/health").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/files/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, e) -> {
+                            log.warn("Unauthorized: {} {}", request.getMethod(), request.getRequestURI());
                             response.setStatus(401);
                             response.setContentType("application/json;charset=UTF-8");
                             response.getWriter().write("{\"message\":\"認証が必要です\"}");
