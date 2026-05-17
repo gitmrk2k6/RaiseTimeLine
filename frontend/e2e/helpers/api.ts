@@ -44,7 +44,7 @@ export async function createPost(content: string, accessToken: string): Promise<
   const form = new FormData();
   form.append("content", content);
   const res = await axios.post(`${BASE_URL}/posts`, form, {
-    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "multipart/form-data" },
+    headers: { Authorization: `Bearer ${accessToken}` },
   });
   return res.data.id;
 }

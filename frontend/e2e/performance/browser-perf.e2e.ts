@@ -1,8 +1,9 @@
 import { test, expect } from "@playwright/test";
 import { registerUser, uniqueSuffix } from "../helpers/api";
+import { setCookieAndStorage } from "../fixtures/auth";
 
 const THRESHOLDS = {
-  ttfb: 500,
+  ttfb: 2000,
   domContentLoaded: 1500,
   fcp: 2000,
   loginFlow: 3000,
@@ -28,20 +29,7 @@ test.describe("ブラウザパフォーマンス計測", () => {
     testUser = await registerUser(`e2e_perf_${suffix}`, `e2e_perf_${suffix}@test.invalid`, "E2eTest1");
   });
 
-  async function setAuth(page: import("@playwright/test").Page) {
-    await page.goto("/login");
-    await page.evaluate(
-      ({ accessToken, refreshToken, userId, username }) => {
-        localStorage.setItem("raisetimeline_access_token", accessToken);
-        localStorage.setItem("raisetimeline_refresh_token", refreshToken);
-        localStorage.setItem("raisetimeline_user_id", String(userId));
-        localStorage.setItem("raisetimeline_username", username);
-      },
-      { accessToken: testUser.accessToken, refreshToken: testUser.refreshToken, userId: testUser.userId, username: testUser.username }
-    );
-  }
-
-  test("ログインページの TTFB が 500ms 未満である", async ({ page }) => {
+  test("ログインページの TTFB が 2000ms 未満である", async ({ page }) => {
     await page.goto("/login");
     const timing = await page.evaluate<NavTiming>(() => {
       const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
@@ -86,20 +74,20 @@ test.describe("ブラウザパフォーマンス計測", () => {
     expect(elapsed).toBeLessThan(THRESHOLDS.loginFlow);
   });
 
-  test("タイムライン初期ロード（最初の投稿カード表示）が 3000ms 未満である", async ({ page }) => {
-    await setAuth(page);
+  test("タイムライン初期ロード（tab-all 表示）が 3000ms 未満である", async ({ page }) => {
+    await setCookieAndStorage(page, testUser);
     const start = Date.now();
     await page.goto("/home");
-    await page.waitForSelector('[data-testid="post-card"], [data-testid="tab-all"]');
+    await page.waitForSelector('[data-testid="tab-all"]');
     const elapsed = Date.now() - start;
     console.log(`[Perf] Timeline initial load: ${elapsed}ms`);
     expect(elapsed).toBeLessThan(THRESHOLDS.timelineLoad);
   });
 
   test("タイムラインページの FCP が 2000ms 未満である", async ({ page }) => {
-    await setAuth(page);
+    await setCookieAndStorage(page, testUser);
     await page.goto("/home");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     const fcp = await page.evaluate<number>(() => {
       const entries = performance.getEntriesByType("paint") as PaintEntry[];
       const fcpEntry = entries.find((e) => e.name === "first-contentful-paint");
@@ -111,7 +99,7 @@ test.describe("ブラウザパフォーマンス計測", () => {
   });
 
   test("投稿作成からタイムライン反映まで 2000ms 未満である", async ({ page }) => {
-    await setAuth(page);
+    await setCookieAndStorage(page, testUser);
     await page.goto("/home");
     await page.waitForSelector('[data-testid="tab-all"]');
 

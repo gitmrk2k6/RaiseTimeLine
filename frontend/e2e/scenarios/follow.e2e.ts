@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { registerUser, createPost, uniqueSuffix } from "../helpers/api";
+import { setCookieAndStorage } from "../fixtures/auth";
 
 test.describe("フォロー・ユーザー検索", () => {
   let userA: { userId: number; username: string; email: string; accessToken: string; refreshToken: string };
@@ -16,16 +17,7 @@ test.describe("フォロー・ユーザー検索", () => {
     page: import("@playwright/test").Page,
     user: typeof userA
   ) {
-    await page.goto("/login");
-    await page.evaluate(
-      ({ accessToken, refreshToken, userId, username }) => {
-        localStorage.setItem("raisetimeline_access_token", accessToken);
-        localStorage.setItem("raisetimeline_refresh_token", refreshToken);
-        localStorage.setItem("raisetimeline_user_id", String(userId));
-        localStorage.setItem("raisetimeline_username", username);
-      },
-      { accessToken: user.accessToken, refreshToken: user.refreshToken, userId: user.userId, username: user.username }
-    );
+    await setCookieAndStorage(page, user);
     await page.goto("/home");
     await page.waitForSelector('[data-testid="tab-all"]');
   }
@@ -61,6 +53,7 @@ test.describe("フォロー・ユーザー検索", () => {
     }
 
     await page.goto("/home");
+    await page.waitForSelector('[data-testid="tab-all"]');
     await page.getByTestId("tab-following").click();
     await expect(page.locator('[data-testid="post-card"]').first()).toBeVisible();
   });

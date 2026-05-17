@@ -24,8 +24,11 @@ test.describe("いいね機能", () => {
     const likeCount = card.getByTestId("like-count");
     const likeButton = card.getByTestId("like-button");
 
+    const before = parseInt(await likeCount.innerText(), 10);
     await likeButton.click();
-    const afterLike = parseInt(await likeCount.innerText(), 10);
+    // Wait for the like count to update before reading it
+    await expect(likeCount).toHaveText(String(before + 1));
+    const afterLike = before + 1;
     await likeButton.click();
     await expect(likeCount).toHaveText(String(afterLike - 1));
     await expect(likeButton).not.toHaveClass(/text-red-500/);

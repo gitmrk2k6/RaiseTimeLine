@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { registerUser, uniqueSuffix } from "../helpers/api";
+import { setCookieAndStorage } from "../fixtures/auth";
 
 test.describe("認証フロー", () => {
   test("新規ユーザー登録後に /home へリダイレクトされる", async ({ page }) => {
@@ -22,10 +23,25 @@ test.describe("認証フロー", () => {
     await expect(page).toHaveURL("/home");
   });
 
+  test("空のメールアドレスでクライアントバリデーションエラーが表示される", async ({ page }) => {
+    await page.goto("/login");
+    await page.getByTestId("password-input").fill("somepassword");
+    // HTML5 type="email" では空値はバリデーション通過するため noValidate で Zod バリデーションを走らせる
+    await page.evaluate(() => {
+      (document.querySelector("form") as HTMLFormElement).noValidate = true;
+    });
+    await page.getByTestId("login-submit").click();
+    await expect(page.getByText("メールアドレスを入力してください")).toBeVisible();
+  });
+
   test("無効なメールアドレス形式でクライアントバリデーションエラーが表示される", async ({ page }) => {
     await page.goto("/login");
-    await page.getByTestId("email-input").fill("invalid-email");
+    await page.getByTestId("email-input").fill("notanemail");
     await page.getByTestId("password-input").fill("somepassword");
+    // HTML5 constraint validation を無効化して Zod バリデーションを通す
+    await page.evaluate(() => {
+      (document.querySelector("form") as HTMLFormElement).noValidate = true;
+    });
     await page.getByTestId("login-submit").click();
     await expect(page.getByText("メールアドレスの形式が正しくありません")).toBeVisible();
   });
@@ -43,17 +59,9 @@ test.describe("認証フロー", () => {
   test("ログアウト後に /login へリダイレクトされる", async ({ page }) => {
     const suffix = uniqueSuffix();
     const user = await registerUser(`e2e_${suffix}`, `e2e_${suffix}@test.invalid`, "E2eTest1");
-    await page.goto("/login");
-    await page.evaluate(
-      ({ accessToken, refreshToken, userId, username }) => {
-        localStorage.setItem("raisetimeline_access_token", accessToken);
-        localStorage.setItem("raisetimeline_refresh_token", refreshToken);
-        localStorage.setItem("raisetimeline_user_id", String(userId));
-        localStorage.setItem("raisetimeline_username", username);
-      },
-      { accessToken: user.accessToken, refreshToken: user.refreshToken, userId: user.userId, username: user.username }
-    );
+    await setCookieAndStorage(page, user);
     await page.goto("/home");
+    await page.waitForSelector('[data-testid="tab-all"]');
     await page.getByTestId("logout-button").click();
     await expect(page).toHaveURL("/login");
   });

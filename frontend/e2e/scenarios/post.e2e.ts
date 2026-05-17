@@ -18,8 +18,10 @@ test.describe("投稿 CRUD", () => {
 
     const card = page.locator('[data-testid="post-card"]').filter({ has: page.locator(`text=${original}`) }).first();
     await card.getByTestId("edit-button").click();
-    await card.getByTestId("edit-textarea").fill(updated);
-    await card.getByTestId("edit-save").click();
+    // Use page-level locator after entering edit mode — the card filter no longer matches
+    // once edit-textarea replaces post-content in the DOM
+    await page.getByTestId("edit-textarea").fill(updated);
+    await page.getByTestId("edit-save").click();
 
     await expect(page.locator('[data-testid="post-content"]').filter({ hasText: updated }).first()).toBeVisible();
   });
