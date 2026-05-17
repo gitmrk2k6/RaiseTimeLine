@@ -4,8 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getProfile, updateProfile } from "@/lib/users";
 import { getUserId, setUsername } from "@/lib/auth";
+import { useAuthGuard } from "@/app/hooks/useAuthGuard";
 
 export default function ProfileEditPage() {
+  useAuthGuard();
   const router = useRouter();
   const currentUserId = getUserId();
   const [usernameVal, setUsernameVal] = useState("");

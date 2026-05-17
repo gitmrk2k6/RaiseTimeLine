@@ -135,15 +135,9 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Build frontend
-        working-directory: frontend
-        run: npm run build
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:8080/api
-
       - name: Start frontend
         working-directory: frontend
-        run: npm run start &
+        run: npm run dev &
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8080/api
 

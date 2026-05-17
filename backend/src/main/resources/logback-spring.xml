@@ -40,35 +40,12 @@
       </encoder>
     </appender>
 
-    <!-- ファイル出力 + 日次ローテーション（EC2 ローカルに保存） -->
-    <appender name="FILE_JSON" class="ch.qos.logback.core.rolling.RollingFileAppender">
-      <file>/var/log/raisetimeline/app.log</file>
-      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-        <fileNamePattern>/var/log/raisetimeline/app.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-        <maxHistory>30</maxHistory>
-        <totalSizeCap>2GB</totalSizeCap>
-      </rollingPolicy>
-      <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-        <customFields>{"service":"raisetimeline-backend","env":"prod"}</customFields>
-      </encoder>
-    </appender>
-
-    <!-- 非同期ラッパー（I/O ブロッキング防止） -->
-    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
-      <appender-ref ref="FILE_JSON"/>
-      <!-- キュー残量 20% 未満のとき WARN 以下を捨てる（ERROR は捨てない） -->
-      <discardingThreshold>20</discardingThreshold>
-      <queueSize>512</queueSize>
-      <includeCallerData>false</includeCallerData>
-    </appender>
-
+    <!-- ECS Fargate: stdout → CloudWatch Logs に転送 -->
     <root level="INFO">
       <appender-ref ref="CONSOLE_JSON"/>
-      <appender-ref ref="ASYNC_FILE"/>
     </root>
     <logger name="com.raisetimeline" level="INFO" additivity="false">
       <appender-ref ref="CONSOLE_JSON"/>
-      <appender-ref ref="ASYNC_FILE"/>
     </logger>
     <logger name="org.springframework.security" level="WARN"/>
     <logger name="com.raisetimeline.mapper" level="INFO"/>

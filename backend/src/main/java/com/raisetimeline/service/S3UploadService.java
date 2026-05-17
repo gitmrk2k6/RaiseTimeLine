@@ -35,6 +35,9 @@ public class S3UploadService {
     @Value("${app.s3.local-base-url}")
     private String localBaseUrl;
 
+    @Value("${app.s3.cloudfront-url:}")
+    private String cloudfrontUrl;
+
     public String upload(MultipartFile file) {
         validate(file);
         if (bucket.isBlank()) {
@@ -84,6 +87,9 @@ public class S3UploadService {
         } catch (IOException e) {
             log.error("Failed to upload to S3: bucket={}, key={}", bucket, key, e);
             throw new RuntimeException("画像のアップロードに失敗しました", e);
+        }
+        if (!cloudfrontUrl.isBlank()) {
+            return cloudfrontUrl + "/" + key;
         }
         return "https://" + bucket + ".s3." + region + ".amazonaws.com/" + key;
     }
