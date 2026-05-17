@@ -47,3 +47,6 @@ logs/
 
 # AWS
 .aws/
+
+# k6 performance test reports (HTML files only, .gitkeep is tracked)
+performance/k6/reports/*.html
