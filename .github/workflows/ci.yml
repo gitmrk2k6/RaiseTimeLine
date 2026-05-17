@@ -143,9 +143,7 @@ jobs:
 
       - name: Start frontend
         working-directory: frontend
-        run: npm run start &
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:8080/api
+        run: npx serve out -l 3000 &
 
       - name: Wait for frontend
         run: |
