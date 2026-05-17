@@ -1,5 +1,7 @@
 # RaiseTimeLine
 
+[![CI](https://github.com/gitmrk2k6/RaiseTimeLine/actions/workflows/ci.yml/badge.svg)](https://github.com/gitmrk2k6/RaiseTimeLine/actions/workflows/ci.yml)
+
 RaiseTech AI エンジニアコース 学習課題として開発中の X（旧Twitter）風 SNS Web アプリケーション。
 
 ## 概要
