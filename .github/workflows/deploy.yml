@@ -82,6 +82,7 @@ jobs:
         working-directory: frontend
         env:
           NEXT_PUBLIC_API_URL: https://${{ secrets.CLOUDFRONT_DOMAIN }}/api
+          NEXT_STATIC_EXPORT: "true"
         run: npm run build
 
       - name: Sync HTML files to S3 (no-cache)
