@@ -15,6 +15,7 @@
 
 import http from "k6/http";
 import { check, sleep } from "k6";
+import { FormData } from "https://jslib.k6.io/formdata/0.0.2/index.js";
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 
@@ -93,16 +94,16 @@ export default function (users) {
   };
 
   // ── 1. 投稿作成（multipart/form-data）──────────────────────────
-  // k6 の http.file() を使わず FormData 相当を文字列で構築
-  // Content-Type は multipart/form-data だが、テキストのみのため
-  // application/x-www-form-urlencoded で代用（Spring の @RequestPart は受け付ける）
   const postContent = `パフォーマンステスト投稿 by ${user.username} at ${Date.now()}`;
-  const formData = {
-    content: postContent,
-  };
 
-  const postRes = http.post(`${BASE_URL}/api/posts`, formData, {
-    headers: { Authorization: `Bearer ${user.accessToken}` },
+  const fd = new FormData();
+  fd.append("content", postContent);
+
+  const postRes = http.post(`${BASE_URL}/api/posts`, fd.body(), {
+    headers: {
+      Authorization: `Bearer ${user.accessToken}`,
+      "Content-Type": `multipart/form-data; boundary=${fd.boundary}`,
+    },
   });
 
   const postOk = check(postRes, {
@@ -160,6 +161,50 @@ export default function (users) {
   });
 
   sleep(1);
+}
+
+// ----------------------------------------------------------------
+// teardown: テスト終了後にテストデータを削除（自動クリーンアップ）
+// ----------------------------------------------------------------
+export function teardown(users) {
+  console.log(`\n[teardown] クリーンアップ開始 (${users.length} ユーザー分の投稿を削除)`);
+
+  for (const user of users) {
+    const authHeaders = {
+      Authorization: `Bearer ${user.accessToken}`,
+      Accept: "application/json",
+    };
+
+    // ユーザーの投稿をカーソルページネーションで全件取得して削除
+    // 投稿を削除するとコメント・いいねも CASCADE で削除される
+    let cursor = null;
+    let deleted = 0;
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const url = cursor
+        ? `${BASE_URL}/api/users/${user.userId}/posts?limit=20&before=${encodeURIComponent(cursor)}`
+        : `${BASE_URL}/api/users/${user.userId}/posts?limit=20`;
+
+      const res = http.get(url, { headers: authHeaders });
+      if (res.status !== 200) break;
+
+      const posts = res.json();
+      if (!Array.isArray(posts) || posts.length === 0) break;
+
+      for (const post of posts) {
+        http.del(`${BASE_URL}/api/posts/${post.id}`, null, { headers: authHeaders });
+        deleted++;
+      }
+
+      if (posts.length < 20) break;
+      cursor = posts[posts.length - 1].createdAt;
+    }
+
+    console.log(`[teardown] userId=${user.userId} (${user.username}): ${deleted} 件の投稿を削除しました`);
+  }
+
+  console.log("[teardown] クリーンアップ完了");
 }
 
 // ----------------------------------------------------------------

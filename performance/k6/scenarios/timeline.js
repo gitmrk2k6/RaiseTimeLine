@@ -132,6 +132,51 @@ export default function (users) {
 }
 
 // ----------------------------------------------------------------
+// teardown: テスト終了後にテストデータを削除（自動クリーンアップ）
+// ----------------------------------------------------------------
+export function teardown(users) {
+  console.log(`\n[teardown] クリーンアップ開始 (${users.length} ユーザー分の投稿を削除)`);
+
+  for (const user of users) {
+    const authHeaders = {
+      Authorization: `Bearer ${user.accessToken}`,
+      Accept: "application/json",
+    };
+
+    // ユーザーの投稿をカーソルページネーションで全件取得して削除
+    let cursor = null;
+    let deleted = 0;
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const url = cursor
+        ? `${BASE_URL}/api/users/${user.userId}/posts?limit=20&before=${encodeURIComponent(cursor)}`
+        : `${BASE_URL}/api/users/${user.userId}/posts?limit=20`;
+
+      const res = http.get(url, { headers: authHeaders });
+      if (res.status !== 200) break;
+
+      const posts = res.json();
+      if (!Array.isArray(posts) || posts.length === 0) break;
+
+      for (const post of posts) {
+        http.del(`${BASE_URL}/api/posts/${post.id}`, null, { headers: authHeaders });
+        deleted++;
+      }
+
+      if (posts.length < 20) break;
+      cursor = posts[posts.length - 1].createdAt;
+    }
+
+    if (deleted > 0) {
+      console.log(`[teardown] userId=${user.userId}: ${deleted} 件の投稿を削除しました`);
+    }
+  }
+
+  console.log("[teardown] クリーンアップ完了");
+}
+
+// ----------------------------------------------------------------
 // handleSummary: テスト終了後に HTML レポートを生成
 // ----------------------------------------------------------------
 export function handleSummary(data) {
