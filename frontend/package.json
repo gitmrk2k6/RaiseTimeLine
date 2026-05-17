@@ -10,7 +10,9 @@
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
-    "test:e2e:report": "playwright show-report ../performance/playwright/reports"
+    "test:e2e:ci": "playwright test --ignore=e2e/performance/",
+    "test:e2e:report": "playwright show-report ../performance/playwright/reports",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

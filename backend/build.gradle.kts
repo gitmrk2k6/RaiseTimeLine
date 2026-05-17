@@ -2,6 +2,7 @@ plugins {
     java
     id("org.springframework.boot") version "3.4.4"
     id("io.spring.dependency-management") version "1.1.7"
+    checkstyle
 }
 
 group = "com.raisetimeline"
@@ -48,6 +49,12 @@ dependencies {
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.4")
+}
+
+checkstyle {
+    toolVersion = "10.21.0"
+    configFile = file("config/checkstyle/checkstyle.xml")
+    isIgnoreFailures = false
 }
 
 tasks.withType<Test> {
