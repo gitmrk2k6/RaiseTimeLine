@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { searchUsers, followUser, unfollowUser, type UserProfile } from "@/lib/users";
 import { getUserId } from "@/lib/auth";
+import { useAuthGuard } from "@/app/hooks/useAuthGuard";
 
 function FollowButton({
   user,
@@ -48,6 +49,7 @@ function FollowButton({
 }
 
 export default function SearchPage() {
+  useAuthGuard();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<UserProfile[]>([]);

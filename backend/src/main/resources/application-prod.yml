@@ -3,6 +3,9 @@ spring:
     url: "jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME:raisetimeline}"
     username: "${DB_USERNAME}"
     password: "${DB_PASSWORD}"
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
 
 logging:
   level:
@@ -13,3 +16,13 @@ management:
   endpoint:
     health:
       show-details: always
+
+app:
+  s3:
+    cloudfront-url: "${CLOUDFRONT_MEDIA_URL:}"
+
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false

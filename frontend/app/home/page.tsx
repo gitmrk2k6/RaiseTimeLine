@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { removeTokens, getUserId, getAccessToken, getRefreshToken, setAccessToken } from "@/lib/auth";
+import { useAuthGuard } from "@/app/hooks/useAuthGuard";
 import { fetchTimeline, createPost, updatePost, deletePost, type Post } from "@/lib/posts";
 import PostForm from "@/app/components/PostForm";
 import PostCard from "@/app/components/PostCard";
@@ -53,6 +54,7 @@ function createSseConnection(
 }
 
 export default function HomePage() {
+  useAuthGuard();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("all");
   const [posts, setPosts] = useState<Post[]>([]);
