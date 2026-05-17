@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getFollowers, getFollowing, followUser, unfollowUser, type UserProfile } from "@/lib/users";
 import { getUserId } from "@/lib/auth";
@@ -87,9 +87,7 @@ function UserList({
   );
 }
 
-function FollowsContent() {
-  const { userId: userIdStr } = useParams<{ userId: string }>();
-  const userId = Number(userIdStr);
+function FollowsContent({ userId }: { userId: number }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as Tab) ?? "following";
@@ -177,10 +175,10 @@ function FollowsContent() {
   );
 }
 
-export default function FollowsClient() {
+export default function FollowsClient({ userId }: { userId: number }) {
   return (
     <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>}>
-      <FollowsContent />
+      <FollowsContent userId={userId} />
     </Suspense>
   );
 }

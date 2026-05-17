@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getProfile, getUserPosts, followUser, unfollowUser, type UserProfile } from "@/lib/users";
 import { type Post } from "@/lib/posts";
@@ -12,10 +12,8 @@ import { useAuthGuard } from "@/app/hooks/useAuthGuard";
 
 const PAGE_SIZE = 20;
 
-export default function ProfileClient() {
+export default function ProfileClient({ userId }: { userId: number }) {
   useAuthGuard();
-  const { userId: userIdStr } = useParams<{ userId: string }>();
-  const userId = Number(userIdStr);
   const router = useRouter();
   const currentUserId = getUserId();
 
