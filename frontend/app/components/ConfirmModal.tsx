@@ -29,12 +29,14 @@ export default function ConfirmModal({
         <p className="text-sm text-gray-600">{message}</p>
         <div className="flex gap-3 justify-end">
           <button
+            data-testid="confirm-cancel"
             onClick={onCancel}
             className="text-sm text-gray-500 hover:text-gray-700 px-4 py-1.5 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors"
           >
             キャンセル
           </button>
           <button
+            data-testid="confirm-ok"
             onClick={onConfirm}
             className="text-sm text-white bg-red-500 hover:bg-red-600 px-4 py-1.5 rounded-full transition-colors"
           >

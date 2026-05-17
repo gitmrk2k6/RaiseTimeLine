@@ -58,6 +58,7 @@ export default function LoginPage() {
             <input
               type="email"
               {...register("email")}
+              data-testid="email-input"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="you@example.com"
             />
@@ -73,6 +74,7 @@ export default function LoginPage() {
             <input
               type="password"
               {...register("password")}
+              data-testid="password-input"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="••••••••"
             />
@@ -82,11 +84,12 @@ export default function LoginPage() {
           </div>
 
           {serverError && (
-            <p className="text-sm text-red-600 text-center">{serverError}</p>
+            <p data-testid="server-error" className="text-sm text-red-600 text-center">{serverError}</p>
           )}
 
           <button
             type="submit"
+            data-testid="login-submit"
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 rounded-lg transition-colors"
           >

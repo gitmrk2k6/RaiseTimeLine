@@ -84,7 +84,7 @@ export default function CommentSection({
         {comments.length > 0 && (
           <ul className="space-y-2 mb-3">
             {comments.map((comment) => (
-              <li key={comment.id} className="flex items-start gap-2">
+              <li key={comment.id} data-testid="comment-item" className="flex items-start gap-2">
                 {comment.profileImageUrl ? (
                   <img
                     src={comment.profileImageUrl}
@@ -106,6 +106,7 @@ export default function CommentSection({
                 </div>
                 {comment.userId === currentUserId && (
                   <button
+                    data-testid="comment-delete"
                     onClick={() => setDeletingCommentId(comment.id)}
                     className="text-xs text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
                   >
@@ -119,6 +120,7 @@ export default function CommentSection({
 
         <div className="flex gap-2 items-end">
           <textarea
+            data-testid="comment-textarea"
             value={newContent}
             onChange={(e) => setNewContent(e.target.value)}
             placeholder="コメントを入力..."
@@ -130,6 +132,7 @@ export default function CommentSection({
               {remaining}
             </span>
             <button
+              data-testid="comment-submit"
               onClick={handleSubmit}
               disabled={submitting || !newContent.trim() || remaining < 0}
               className="text-xs bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white px-3 py-1 rounded-full transition-colors"

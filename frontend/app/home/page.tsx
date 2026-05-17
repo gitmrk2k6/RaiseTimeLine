@@ -230,6 +230,7 @@ export default function HomePage() {
               </button>
             )}
             <button
+              data-testid="logout-button"
               onClick={handleLogout}
               className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
             >
@@ -241,6 +242,7 @@ export default function HomePage() {
         {/* タブ切り替え */}
         <div className="max-w-xl mx-auto flex border-t border-gray-100">
           <button
+            data-testid="tab-all"
             onClick={() => setActiveTab("all")}
             className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
               activeTab === "all"
@@ -251,6 +253,7 @@ export default function HomePage() {
             すべて
           </button>
           <button
+            data-testid="tab-following"
             onClick={() => setActiveTab("following")}
             className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
               activeTab === "following"
@@ -267,6 +270,7 @@ export default function HomePage() {
       {newPostsBuffer.length > 0 && (
         <div className="sticky top-[97px] z-10 flex justify-center pt-2 px-4">
           <button
+            data-testid="new-posts-banner"
             onClick={handleShowNewPosts}
             className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-full shadow-lg transition-colors animate-bounce"
           >

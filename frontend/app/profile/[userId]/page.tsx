@@ -149,15 +149,17 @@ export default function ProfilePage() {
               </div>
             )}
             <div className="flex-1">
-              <p className="font-bold text-gray-900 text-lg">{profile.username}</p>
+              <p data-testid="profile-username" className="font-bold text-gray-900 text-lg">{profile.username}</p>
               <div className="flex gap-4 mt-1">
                 <Link
+                  data-testid="following-count"
                   href={`/profile/${userId}/follows?tab=following`}
                   className="text-sm text-gray-600 hover:underline"
                 >
                   <span className="font-semibold">{profile.followingCount}</span> フォロー中
                 </Link>
                 <Link
+                  data-testid="follower-count"
                   href={`/profile/${userId}/follows?tab=followers`}
                   className="text-sm text-gray-600 hover:underline"
                 >
@@ -180,6 +182,7 @@ export default function ProfilePage() {
             </Link>
           ) : (
             <button
+              data-testid="follow-toggle"
               onClick={handleToggleFollow}
               disabled={followLoading}
               className={`w-full text-sm font-semibold py-2 rounded-full border transition-colors ${

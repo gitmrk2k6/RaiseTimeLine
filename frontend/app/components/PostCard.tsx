@@ -85,7 +85,7 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
         />
       )}
 
-      <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+      <div data-testid="post-card" className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
         <div className="flex items-start gap-3">
           {post.profileImageUrl ? (
             <img
@@ -110,6 +110,7 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
               {isOwner && !isEditing && (
                 <div className="flex gap-2">
                   <button
+                    data-testid="edit-button"
                     onClick={() => {
                       setEditContent(post.content);
                       setIsEditing(true);
@@ -119,6 +120,7 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
                     編集
                   </button>
                   <button
+                    data-testid="delete-button"
                     onClick={() => setShowDeleteModal(true)}
                     disabled={loading}
                     className="text-xs text-gray-400 hover:text-red-500 transition-colors"
@@ -140,6 +142,7 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
             {isEditing ? (
               <div className="mt-2">
                 <textarea
+                  data-testid="edit-textarea"
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   rows={3}
@@ -151,12 +154,14 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
                   </span>
                   <div className="flex gap-2">
                     <button
+                      data-testid="edit-cancel"
                       onClick={() => setIsEditing(false)}
                       className="text-xs text-gray-500 hover:text-gray-700"
                     >
                       キャンセル
                     </button>
                     <button
+                      data-testid="edit-save"
                       onClick={handleUpdate}
                       disabled={loading || !editContent.trim() || remaining < 0}
                       className="text-xs bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white px-3 py-1 rounded-full transition-colors"
@@ -167,12 +172,13 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
                 </div>
               </div>
             ) : (
-              <p className="mt-1 text-sm text-gray-800 whitespace-pre-wrap break-words">{post.content}</p>
+              <p data-testid="post-content" className="mt-1 text-sm text-gray-800 whitespace-pre-wrap break-words">{post.content}</p>
             )}
 
             {!isEditing && (
               <div className="mt-3 flex items-center gap-4">
                 <button
+                  data-testid="like-button"
                   onClick={handleToggleLike}
                   className={`flex items-center gap-1 text-xs transition-colors ${
                     likedByCurrentUser
@@ -194,10 +200,11 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
                       d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
                     />
                   </svg>
-                  <span>{likeCount}</span>
+                  <span data-testid="like-count">{likeCount}</span>
                 </button>
 
                 <button
+                  data-testid="comment-toggle"
                   onClick={() => setShowComments((prev) => !prev)}
                   className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-500 transition-colors"
                 >
@@ -215,7 +222,7 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
                       d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
                     />
                   </svg>
-                  <span>{commentCount}</span>
+                  <span data-testid="comment-count">{commentCount}</span>
                 </button>
               </div>
             )}
