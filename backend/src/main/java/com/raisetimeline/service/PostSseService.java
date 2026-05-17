@@ -30,14 +30,19 @@ public class PostSseService {
 
     public void broadcast(PostResponse post) {
         List<SseEmitter> deadEmitters = new CopyOnWriteArrayList<>();
+        String data;
+        try {
+            data = objectMapper.writeValueAsString(post);
+        } catch (Exception e) {
+            log.error("Failed to serialize post for SSE broadcast: id={}", post != null ? post.getId() : null, e);
+            return;
+        }
         for (SseEmitter emitter : emitters) {
             try {
-                emitter.send(SseEmitter.event()
-                        .name("new-post")
-                        .data(objectMapper.writeValueAsString(post)));
-            } catch (IOException e) {
+                emitter.send(SseEmitter.event().name("new-post").data(data));
+            } catch (Exception e) {
+                log.warn("SSE emitter failed, removing: {}", e.getMessage());
                 deadEmitters.add(emitter);
-                emitter.complete();
             }
         }
         emitters.removeAll(deadEmitters);

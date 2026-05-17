@@ -50,3 +50,8 @@ logs/
 
 # k6 performance test reports (HTML files only, .gitkeep is tracked)
 performance/k6/reports/*.html
+
+# Playwright test artifacts
+performance/playwright/reports/
+frontend/test-results/
+frontend/playwright-report/

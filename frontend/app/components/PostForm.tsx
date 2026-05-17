@@ -70,6 +70,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
         onChange={(e) => setContent(e.target.value)}
         placeholder="いまどうしてる？"
         rows={3}
+        data-testid="post-textarea"
         className="w-full resize-none text-sm border-none outline-none placeholder-gray-400 text-gray-900"
       />
 
@@ -91,11 +92,11 @@ export default function PostForm({ onSubmit }: PostFormProps) {
         </div>
       )}
 
-      {fileError && <p className="mt-1 text-xs text-red-500">{fileError}</p>}
+      {fileError && <p data-testid="file-error" className="mt-1 text-xs text-red-500">{fileError}</p>}
 
       <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
         <div className="flex items-center gap-3">
-          <span className={`text-sm font-medium ${isOverLimit ? "text-red-500" : "text-gray-400"}`}>
+          <span data-testid="char-remaining" className={`text-sm font-medium ${isOverLimit ? "text-red-500" : "text-gray-400"}`}>
             {remaining}
           </span>
           <button
@@ -120,6 +121,7 @@ export default function PostForm({ onSubmit }: PostFormProps) {
           {error && <p className="text-xs text-red-500">{error}</p>}
           <button
             type="submit"
+            data-testid="post-submit"
             disabled={loading || !content.trim() || isOverLimit}
             className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white text-sm font-semibold px-4 py-1.5 rounded-full transition-colors"
           >

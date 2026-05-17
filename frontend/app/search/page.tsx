@@ -33,6 +33,7 @@ function FollowButton({
 
   return (
     <button
+      data-testid="follow-button"
       onClick={handleClick}
       disabled={loading}
       className={`text-sm font-semibold px-4 py-1.5 rounded-full border transition-colors ${
@@ -101,6 +102,7 @@ export default function SearchPage() {
         <form onSubmit={handleSearch} className="flex gap-2">
           <input
             type="text"
+            data-testid="search-input"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="ユーザー名を入力"
@@ -108,6 +110,7 @@ export default function SearchPage() {
           />
           <button
             type="submit"
+            data-testid="search-submit"
             disabled={loading || !query.trim()}
             className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
           >
@@ -123,6 +126,7 @@ export default function SearchPage() {
           {results.map((user) => (
             <div
               key={user.id}
+              data-testid="search-result-item"
               className="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm"
             >
               {user.profileImageUrl ? (
