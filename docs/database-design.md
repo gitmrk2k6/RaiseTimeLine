@@ -150,7 +150,9 @@ erDiagram
 | posts | idx_posts_created_at | created_at DESC | INDEX | タイムライン新着順取得 |
 | comments | idx_comments_post_id | post_id | INDEX | 投稿のコメント一覧取得 |
 | comments | idx_comments_user_id | user_id | INDEX | ユーザーのコメント一覧取得 |
+| comments | idx_comments_post_order | (post_id, created_at ASC) | INDEX | コメント昇順取得の高速化 |
 | likes | idx_likes_post_id | post_id | INDEX | 投稿のいいね数集計 |
+| likes | idx_likes_user_id | user_id | INDEX | ユーザーのいいね一覧取得 |
 | likes | uq_likes_post_user | (post_id, user_id) | UNIQUE | 同一ユーザーの重複いいね防止 |
 | follows | uq_follows_follower_following | (follower_id, following_id) | UNIQUE | 重複フォロー防止 |
 | follows | idx_follows_follower_id | follower_id | INDEX | フォロー中一覧取得 |
@@ -185,8 +187,8 @@ erDiagram
 
 ### CHECK 制約
 
-- posts.content: LENGTH(content) <= 280
-- comments.content: LENGTH(content) <= 140
+- posts.content: LENGTH(content) <= 280（DB 制約）
+- comments.content: LENGTH(content) >= 1（DB 制約）。上限 140 文字はアプリ側バリデーション（`@Size(max=140)`）で管理
 - follows: follower_id ≠ following_id（自分自身をフォロー禁止）
 
 ---
