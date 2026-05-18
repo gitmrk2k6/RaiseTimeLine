@@ -162,7 +162,7 @@ cd frontend && npm run dev
 | データベース | PostgreSQL 17（Docker） |
 | 認証 | Spring Security + JWT（JJWT） |
 | 画像ストレージ | AWS S3 |
-| インフラ | AWS EC2 + RDS + ALB |
+| インフラ | AWS ECS Fargate + RDS + ALB + CloudFront + S3 |
 
 - バージョンを変更したら `docs/tech-stack.md` も同時に更新する
 

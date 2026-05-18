@@ -59,3 +59,7 @@ frontend/playwright-report/
 # Terraform secrets
 infra/terraform.tfvars
 *.tfvars
+
+# Terraform local cache and plan output
+infra/.terraform/
+infra/tfplan
