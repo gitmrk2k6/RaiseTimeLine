@@ -2,37 +2,38 @@
 
 関連: [要件定義書](requirements.md) / [技術スタック](tech-stack.md)
 
-> **注記**: AWS S3（画像ストレージ）は確定。EC2 + RDS + ALB 構成は前提として設計するが、AWSサーバー構築方式は実装フェーズで最終確定予定。
-
 ## アーキテクチャ概要
 
 ```text
 [ブラウザ]
     |
-    | HTTPS :443
+    | HTTPS
     v
-[ALB（Application Load Balancer）]
+[CloudFront（メイン）]
     |
-    | HTTP :80（バックエンド）/ HTTP :3000（フロントエンド）
-    v
-[EC2（Amazon Linux 2023）]
-    |-- Nginx
-    |     |-- /* --------> Next.js :3000         (フロントエンド)
-    |     `-- /api/* ----> Spring Boot :8080      (バックエンドへリバースプロキシ)
+    |-- /api/*  ──────────────> [ALB（Application Load Balancer）]
+    |                                      |
+    |                                      | HTTP :8080
+    |                                      v
+    |                           [ECS Fargate（Spring Boot）]
+    |                           （パブリックサブネット、パブリック IP 付き）
+    |                                      |
+    |                                      | PostgreSQL :5432
+    |                                      v
+    |                           [RDS（PostgreSQL 17）]
+    |                           （プライベートサブネット）
     |
-    `-- Spring Boot :8080
-          |
-          | PostgreSQL :5432
-          v
-      [RDS（PostgreSQL 17）]
-      ※ プライベートサブネット配置（外部から直接アクセス不可）
+    `-- /* (静的ファイル) ──> [S3 frontend バケット]（OAC アクセス）
 
-[別途]
-EC2（Spring Boot）
+[CloudFront（メディア）]
     |
-    | AWS SDK（S3 PutObject / GetObject）
+    `-- /* ────────────────> [S3 media バケット]（OAC アクセス）
+
+[ECS Fargate（Spring Boot）]
+    |
+    | S3 PutObject/GetObject（IAM タスクロール経由）
     v
-[AWS S3]（画像ファイル保存）
+[S3 media バケット]（投稿・プロフィール画像保存）
 ```
 
 ---
@@ -41,13 +42,18 @@ EC2（Spring Boot）
 
 | サービス | スペック | 用途 |
 | --- | --- | --- |
-| EC2 | t2.micro / Amazon Linux 2023 | アプリサーバー（Spring Boot + Next.js + Nginx） |
-| RDS | db.t3.micro / PostgreSQL 17 | マネージドデータベース |
-| ALB | Application Load Balancer | HTTPSターミネーション・ロードバランシング |
-| S3 | 標準ストレージクラス | 投稿画像・プロフィール画像の保存 |
+| ECS Fargate | 512 CPU / 1024 MB メモリ | バックエンドコンテナ実行（Spring Boot） |
+| ECR | - | Docker イメージレポジトリ |
+| RDS | db.t3.micro / PostgreSQL 17 | マネージドデータベース（プライベートサブネット） |
+| ALB | Application Load Balancer | ECS へのルーティング（CloudFront → ALB → ECS） |
+| S3（frontend） | `{app}-frontend-{env}` | Next.js 静的ビルド成果物の配信 |
+| S3（media） | `{app}-media-{env}` | 投稿・プロフィール画像の保存 |
+| CloudFront（メイン） | PriceClass_200 | フロントエンド + API のエンドポイント統合（`/api/*` は ALB へ） |
+| CloudFront（メディア） | PriceClass_200 | メディア画像の CDN 配信 |
+| Secrets Manager | - | DB パスワード・JWT シークレットの秘匿情報管理 |
+| CloudWatch Logs | 30 日保持 | ECS コンテナログ収集（`/ecs/{app}-backend`） |
 | VPC | パブリック + プライベートサブネット | ネットワーク分離 |
-| Security Group | EC2用・RDS用・ALB用 の3つ | アクセス制御 |
-| ACM | AWS Certificate Manager | HTTPS用SSL証明書（ALBにアタッチ） |
+| Security Group | ECS用・RDS用・ALB用 の3つ | アクセス制御 |
 
 ---
 
@@ -57,8 +63,8 @@ EC2（Spring Boot）
 VPC (10.0.0.0/16)
  |
  |-- パブリックサブネット 1a (10.0.1.0/24)
- |     `-- EC2（アプリサーバー）
  |     `-- ALB（インターネット向け）
+ |     `-- ECS Fargate（パブリック IP 付き）
  |           Internet Gateway 経由でインターネット接続
  |
  |-- プライベートサブネット 1a (10.0.2.0/24) ──┐
@@ -69,83 +75,98 @@ VPC (10.0.0.0/16)
 
 | SG | インバウンド | 許可元 |
 | --- | --- | --- |
-| ALB用 SG | TCP 443（HTTPS）/ TCP 80（HTTP）| 全開放（0.0.0.0/0） |
-| EC2用 SG | TCP 80（HTTP）| ALB用 SG からのみ |
-| EC2用 SG | TCP 22（SSH）| 開発者の特定IPのみ |
-| RDS用 SG | TCP 5432（PostgreSQL）| EC2用 SG からのみ |
+| ALB用 SG | TCP 80（HTTP）| 全開放（CloudFront 向け） |
+| ECS用 SG | TCP 8080（HTTP）| ALB用 SG からのみ |
+| RDS用 SG | TCP 5432（PostgreSQL）| ECS用 SG からのみ |
+
+> **注記**: HTTPS ターミネーションは CloudFront 側で行う。ALB-ECS 間は HTTP 通信。S3 はパブリックアクセスブロックを有効にし、CloudFront OAC（Origin Access Control）経由でのみアクセスを許可。
 
 ---
 
 ## S3 バケット設計
 
-| バケット名（例） | 用途 | アクセス |
+| バケット名（例） | 用途 | アクセス方式 |
 | --- | --- | --- |
-| raisetimeline-images | 投稿画像・プロフィール画像 | パブリック読み取り可（署名なしURL） |
+| raisetimeline-frontend-prod | Next.js 静的ビルド成果物 | CloudFront（メイン）OAC 経由のみ |
+| raisetimeline-media-prod | 投稿・プロフィール画像 | CloudFront（メディア）OAC 経由のみ |
 
-**S3 保存パス設計:**
-```
-raisetimeline-images/
+**メディア S3 保存パス設計:**
+
+```text
+raisetimeline-media-prod/
 ├── posts/{post_id}/{filename}        # 投稿画像
 └── profiles/{user_id}/{filename}     # プロフィール画像
 ```
 
 ---
 
-## デプロイ手順（概要）
+## デプロイフロー（GitHub Actions）
 
-### 前提条件
+main ブランチへのプッシュで自動実行される。
 
-- AWS CLI 設定済み（`aws configure`）
-- SSH キーペア生成済み
-- ドメイン・ACM証明書取得済み（HTTPS利用時）
+### バックエンド（ECS Fargate）
 
-### 手順
+```bash
+# GitHub Actions (deploy.yml) が自動実行
+1. OIDC 認証（アクセスキー不要）
+2. ECR ログイン
+3. Docker build & push → ECR
+   docker build -t {ECR_REPO}:{SHA} backend/
+   docker push {ECR_REPO}:{SHA}
+4. ECS サービス強制更新
+   aws ecs update-service --force-new-deployment
+5. ECS サービス安定待機
+   aws ecs wait services-stable
+```
 
-1. **インフラ構築（AWS コンソール or Terraform）**
-   - VPC・サブネット・IGW・セキュリティグループを作成
-   - RDS PostgreSQL インスタンスを起動（プライベートサブネット）
-   - EC2 インスタンスを起動（パブリックサブネット）
-   - ALB を作成し EC2 ターゲットグループを紐づけ
-   - S3 バケットを作成し CORS 設定・バケットポリシーを設定
+### フロントエンド（S3 + CloudFront）
 
-2. **アプリのビルド（ローカル）**
-   ```bash
-   cd backend && ./gradlew bootJar
-   cd ../frontend && npm run build
-   ```
+```bash
+# GitHub Actions (deploy.yml) が自動実行
+1. OIDC 認証（アクセスキー不要）
+2. npm ci && npm run build（Next.js 静的エクスポート → frontend/out/）
+3. S3 同期（HTML: no-cache / 静的アセット: 1年キャッシュ）
+   aws s3 sync frontend/out/ s3://{FRONTEND_BUCKET}/
+4. CloudFront キャッシュ無効化
+   aws cloudfront create-invalidation --paths "/*"
+```
 
-3. **EC2 へ転送**
-   - JAR ファイル → `/opt/raisetimeline/`
-   - Next.js ビルド成果物 → `/var/www/raisetimeline/`
-   - Nginx 設定ファイル → `/etc/nginx/conf.d/`
-
-4. **EC2 上でサービス起動**
-   - 環境変数ファイル（`app.env`）を EC2 上に作成
-   - `systemctl enable --now raisetimeline`
-   - `systemctl restart nginx`
-
-5. **動作確認**
-   - ブラウザで ALB の DNS 名（または独自ドメイン）にアクセス
-   - ユーザー登録・ログイン・投稿・画像アップロードを確認
+> **GitHub Actions 認証**: OIDC（`id-token: write`）を使用。AWS アクセスキーを GitHub Secrets に保存せず、`github-actions-deploy` IAM ロールを引き受ける方式。
 
 ---
 
-## アプリの環境変数
+## アプリの環境変数（ECS タスク定義）
 
-本番デプロイ時は以下の環境変数を EC2 上の `app.env` ファイルで設定する。
+本番環境の環境変数は Terraform の ECS タスク定義で管理する。
 
-| 変数名 | 説明 |
-| --- | --- |
-| `DB_HOST` | RDS エンドポイント |
-| `DB_PORT` | データベースポート（5432） |
-| `DB_NAME` | データベース名 |
-| `DB_USERNAME` | DB ユーザー名 |
-| `DB_PASSWORD` | DB パスワード |
-| `JWT_SECRET` | JWT 署名用シークレットキー |
-| `JWT_EXPIRATION_MS` | JWTトークン有効期限（ミリ秒） |
-| `AWS_ACCESS_KEY_ID` | AWS 認証情報（S3アクセス用） |
-| `AWS_SECRET_ACCESS_KEY` | AWS 認証情報（S3アクセス用） |
-| `AWS_S3_BUCKET_NAME` | S3 バケット名 |
-| `AWS_REGION` | AWS リージョン（例: ap-northeast-1） |
-| `CORS_ALLOWED_ORIGINS` | CORS 許可オリジン（フロントエンドURL） |
-| `DDL_AUTO` | Hibernate DDL 設定（本番: `update`） |
+### 通常の環境変数（平文）
+
+| 変数名 | 説明 | 設定値の例 |
+| --- | --- | --- |
+| `SPRING_PROFILES_ACTIVE` | Spring プロファイル | `prod` |
+| `DB_HOST` | RDS エンドポイント | Terraform 自動設定 |
+| `DB_PORT` | データベースポート | `5432` |
+| `DB_NAME` | データベース名 | `raisetimeline` |
+| `DB_USERNAME` | DB ユーザー名 | Terraform 変数 |
+| `AWS_REGION` | AWS リージョン | `ap-northeast-1` |
+| `S3_BUCKET` | メディア用 S3 バケット名 | Terraform 自動設定 |
+| `CLOUDFRONT_MEDIA_URL` | メディア CloudFront URL | Terraform 自動設定 |
+| `CORS_ALLOWED_ORIGINS` | CORS 許可オリジン | CloudFront メインドメイン |
+
+### Secrets Manager 管理（秘匿情報）
+
+| 変数名 | Secrets Manager パス | 説明 |
+| --- | --- | --- |
+| `DB_PASSWORD` | `/{app}/{env}/db-password` | RDS パスワード |
+| `JWT_SECRET` | `/{app}/{env}/jwt-secret` | JWT 署名シークレット |
+
+> **注記**: ECS タスクは IAM タスクロールによって S3 への PutObject/GetObject/DeleteObject 権限を持つ。アクセスキーは一切使用しない。
+
+---
+
+## CI/CD パイプライン（GitHub Actions）
+
+| ワークフロー | トリガー | 内容 |
+| --- | --- | --- |
+| `ci.yml` | 全ブランチへの push / main への PR | フロントエンド（ESLint・TypeScript・Vitest）+ バックエンド（Checkstyle・JUnit）+ E2E（Playwright） |
+| `deploy.yml` | main ブランチへの push | バックエンド ECR push → ECS デプロイ + フロントエンド S3 sync → CloudFront 無効化 |

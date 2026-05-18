@@ -39,16 +39,24 @@
 
 | 技術 | バージョン | 実装状況 | 備考 |
 | --- | --- | --- | --- |
-| AWS S3 | - | 🔲 未実装 | 画像ストレージ（F-05） |
-| AWS EC2 | - | 🔲 未実装 | アプリサーバー |
-| AWS RDS | PostgreSQL 17 | 🔲 未実装 | マネージドDB |
-| AWS ALB | - | 🔲 未実装 | ロードバランサー |
+| AWS ECS Fargate | - | ✅ 実装済み | バックエンドコンテナ実行基盤（512CPU/1024MB） |
+| AWS ECR | - | ✅ 実装済み | Docker イメージレポジトリ |
+| AWS RDS | PostgreSQL 17 | ✅ 実装済み | マネージドデータベース（プライベートサブネット） |
+| AWS ALB | - | ✅ 実装済み | ロードバランサー（CloudFront → ALB → ECS） |
+| AWS S3 | - | ✅ 実装済み | フロントエンド静的配信用 + メディア画像保存用（2バケット） |
+| AWS CloudFront | - | ✅ 実装済み | CDN（メイン配信用 + メディア画像配信用の2ディストリビューション） |
+| AWS Secrets Manager | - | ✅ 実装済み | DB パスワード・JWT シークレットの秘匿情報管理 |
+| AWS CloudWatch Logs | - | ✅ 実装済み | ECS コンテナログ収集（30日保持） |
+| Terraform | 1.x | ✅ 実装済み | インフラ IaC（`infra/` ディレクトリ） |
 
 ## 5. 開発ツール
 
 | 技術 | 実装状況 | 備考 |
 | --- | --- | --- |
-| Docker / Docker Compose | ✅ 実装済み | ローカル開発環境（PostgreSQL コンテナ） |
+| Docker / Docker Compose | ✅ 実装済み | ローカル開発環境（PostgreSQL コンテナ）・本番 ECS コンテナビルド |
+| GitHub Actions | ✅ 実装済み | CI（lint/test/E2E）+ CD（ECR push → ECS deploy / S3 sync） |
+| Vitest 2.1.9 | ✅ 実装済み | フロントエンドユニットテスト |
+| Playwright 1.59.1 | ✅ 実装済み | E2E テスト（6シナリオ） |
 | IntelliJ IDEA / VS Code | ✅ 実装済み | IDE |
 | GitHub | ✅ 実装済み | ソースコード管理・Issue・PR |
 
@@ -105,6 +113,24 @@ RaiseTimeLine/
 │   │   ├── posts.ts             # 投稿・コメント・いいね API 関数
 │   │   └── users.ts             # ユーザー・フォロー API 関数
 │   └── middleware.ts            # ルート保護（認証チェック）
+│
+├── infra/                       # Terraform（AWS インフラ IaC）
+│   ├── main.tf                  # プロバイダ設定・S3 バックエンド
+│   ├── vpc.tf                   # VPC・サブネット・IGW
+│   ├── security.tf              # セキュリティグループ
+│   ├── alb.tf                   # ALB・ターゲットグループ・リスナー
+│   ├── ecs.tf                   # ECS クラスター・タスク定義・サービス・Secrets Manager
+│   ├── ecr.tf                   # ECR リポジトリ
+│   ├── rds.tf                   # RDS PostgreSQL
+│   ├── s3.tf                    # S3 バケット（フロントエンド・メディア）+ IAM ポリシー
+│   ├── cloudfront.tf            # CloudFront ディストリビューション（×2）
+│   ├── variables.tf             # 変数定義
+│   └── outputs.tf               # 出力値定義
+│
+├── .github/
+│   └── workflows/
+│       ├── ci.yml               # CI（lint / typecheck / Vitest / Checkstyle / JUnit / E2E）
+│       └── deploy.yml           # CD（Docker → ECR → ECS deploy / S3 sync → CloudFront）
 │
 └── docker-compose.yml           # ローカル開発用 PostgreSQL
 ```
