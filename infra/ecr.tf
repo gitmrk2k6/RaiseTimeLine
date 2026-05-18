@@ -6,20 +6,22 @@ resource "aws_ecr_repository" "backend" {
     scan_on_push = true
   }
 
-  lifecycle_policy {
-    policy = jsonencode({
-      rules = [{
-        rulePriority = 1
-        description  = "古いイメージを10件まで保持"
-        selection = {
-          tagStatus   = "any"
-          countType   = "imageCountMoreThan"
-          countNumber = 10
-        }
-        action = { type = "expire" }
-      }]
-    })
-  }
-
   tags = { Name = "${var.app_name}-backend-ecr" }
+}
+
+resource "aws_ecr_lifecycle_policy" "backend" {
+  repository = aws_ecr_repository.backend.name
+
+  policy = jsonencode({
+    rules = [{
+      rulePriority = 1
+      description  = "古いイメージを10件まで保持"
+      selection = {
+        tagStatus   = "any"
+        countType   = "imageCountMoreThan"
+        countNumber = 10
+      }
+      action = { type = "expire" }
+    }]
+  })
 }
