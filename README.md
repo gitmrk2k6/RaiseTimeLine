@@ -10,12 +10,6 @@ X（旧Twitter）風 SNS Web アプリケーション。Spring Boot REST API と
 
 ### バックエンド
 
-![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4.4-6DB33F?logo=spring-boot&logoColor=white)
-![Spring Security](https://img.shields.io/badge/Spring_Security-6.x-6DB33F?logo=springsecurity&logoColor=white)
-![MyBatis](https://img.shields.io/badge/MyBatis-3.0.4-000000?logo=mybatis&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791?logo=postgresql&logoColor=white)
-
 | 技術 | バージョン | 採用理由 |
 | --- | --- | --- |
 | Java | 21（LTS） | Spring Boot 3.x 推奨の LTS バージョン |
@@ -28,10 +22,6 @@ X（旧Twitter）風 SNS Web アプリケーション。Spring Boot REST API と
 
 ### フロントエンド
 
-![Next.js](https://img.shields.io/badge/Next.js-14.2-black?logo=next.js&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?logo=tailwindcss&logoColor=white)
-
 | 技術 | バージョン | 採用理由 |
 | --- | --- | --- |
 | Next.js (App Router) | 14.2.35 | SSR/SSG 対応・構造化開発・静的エクスポートで S3 配信 |
@@ -43,11 +33,6 @@ X（旧Twitter）風 SNS Web アプリケーション。Spring Boot REST API と
 | IntersectionObserver API | ブラウザ標準 | 無限スクロール |
 
 ### インフラ・DevOps
-
-![AWS](https://img.shields.io/badge/AWS-ECS_Fargate-FF9900?logo=amazon-aws&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-latest-2496ED?logo=docker&logoColor=white)
-![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC?logo=terraform&logoColor=white)
-![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI%2FCD-2088FF?logo=github-actions&logoColor=white)
 
 | 技術 | 用途 |
 | --- | --- |
