@@ -55,3 +55,7 @@ performance/k6/reports/*.html
 performance/playwright/reports/
 frontend/test-results/
 frontend/playwright-report/
+
+# Terraform secrets
+infra/terraform.tfvars
+*.tfvars
