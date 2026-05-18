@@ -1,5 +1,7 @@
 # RaiseTimeLine
 
+[![CI](https://github.com/gitmrk2k6/RaiseTimeLine/actions/workflows/ci.yml/badge.svg)](https://github.com/gitmrk2k6/RaiseTimeLine/actions/workflows/ci.yml)
+
 X（旧Twitter）風 SNS Web アプリケーション。Spring Boot REST API と Next.js SPA で構成し、ユーザー認証・タイムライン・いいね・コメント・フォロー・画像投稿の 6 機能を実装。AWS ECS Fargate + CloudFront + S3 の本番インフラを Terraform で IaC 化し、GitHub Actions による CI/CD パイプラインも整備。
 
 ---
@@ -13,7 +15,6 @@ X（旧Twitter）風 SNS Web アプリケーション。Spring Boot REST API と
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791?logo=postgresql&logoColor=white)
 ![AWS](https://img.shields.io/badge/AWS-ECS_Fargate-FF9900?logo=amazon-aws&logoColor=white)
 ![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC?logo=terraform&logoColor=white)
-[![CI](https://github.com/gitmrk2k6/RaiseTimeLine/actions/workflows/ci.yml/badge.svg)](https://github.com/gitmrk2k6/RaiseTimeLine/actions/workflows/ci.yml)
 
 ---
 
